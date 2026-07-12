@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useDemoStore } from "@/store";
+import { useDemoStore, useAuthStore } from "@/store";
 import { CURRENT_BUS, CURRENT_DRIVER, WEATHER, TRIP_TIMELINE } from "@/data/mock";
 import type { TripEvent } from "@/types";
 import { useAnimatedCounter } from "@/hooks/use-animations";
@@ -31,6 +31,7 @@ import Link from "next/link";
 
 export function DashboardHero() {
   const { demo } = useDemoStore();
+  const { user } = useAuthStore();
   const eta = useAnimatedCounter(demo.eta);
   const speed = useAnimatedCounter(demo.speed);
   const attendance = useAnimatedCounter(demo.attendance);
@@ -44,7 +45,7 @@ export function DashboardHero() {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-3xl sm:text-4xl font-bold text-white">
-          {getGreeting()}, Adi 👋
+          {getGreeting()}, {user.name} 👋
         </h1>
         <div className="flex items-center gap-3 mt-2">
           <span className="text-white/50">{WEATHER.icon} {WEATHER.temp}°C</span>

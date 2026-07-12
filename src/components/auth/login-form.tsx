@@ -29,7 +29,7 @@ export function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false);
 
   const { register, handleSubmit } = useForm({
-    defaultValues: { name: "", email: "adi@smartbus.io", password: "demo123" },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const onSubmit = (data: any) => {

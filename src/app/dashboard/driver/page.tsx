@@ -5,7 +5,9 @@ import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MAIN_ROUTE, CURRENT_BUS, DRIVER_USER } from "@/data/mock";
+import { MAIN_ROUTE, CURRENT_BUS } from "@/data/mock";
+import { useAuthStore } from "@/store";
+import { getGreeting } from "@/lib/utils";
 import {
   Play,
   Square,
@@ -21,6 +23,7 @@ import {
 } from "lucide-react";
 
 export default function DriverDashboard() {
+  const { user } = useAuthStore();
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
@@ -28,7 +31,7 @@ export default function DriverDashboard() {
       <div className="p-4 lg:p-8 pb-24 lg:pb-8 space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Good Morning, {DRIVER_USER.name}</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">{getGreeting()}, {user.name}</h1>
             <p className="text-white/50">{date} • {MAIN_ROUTE.name}</p>
           </div>
           <div className="text-right hidden sm:block">
