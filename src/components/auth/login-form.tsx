@@ -32,7 +32,7 @@ export function LoginForm() {
     defaultValues: { name: "", email: "", password: "" },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: { name?: string; email: string; password?: string }) => {
     setLoading(true);
     setTimeout(() => {
       if (isSignUp) {
