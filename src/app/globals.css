@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: #071225;
+  }
+
+  * {
+    @apply border-glass-border;
+  }
+
+  body {
+    @apply bg-background text-white antialiased overflow-x-hidden;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image:
+      radial-gradient(circle at top left, rgba(46, 139, 255, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(255, 194, 71, 0.12), transparent 24%),
+      radial-gradient(circle at 50% 80%, rgba(34, 197, 94, 0.08), transparent 30%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: -0.03em;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: rgba(46, 139, 255, 0.3);
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.large-text {
+    font-size: 118%;
+  }
+
+  html.high-contrast {
+    --tw-text-opacity: 1;
+  }
+
+  html.high-contrast body {
+    background: #000;
+  }
+
+  html.high-contrast .glass-panel,
+  html.high-contrast [class*="bg-card"] {
+    background: #0a0a0a !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  html.high-contrast .text-white\/50,
+  html.high-contrast .text-white\/40,
+  html.high-contrast .text-white\/45,
+  html.high-contrast .text-white\/55,
+  html.high-contrast .text-white\/60,
+  html.high-contrast .text-white\/66 {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass {
+    @apply bg-glass backdrop-blur-glass border border-glass-border;
+  }
+
+  .glass-panel {
+    @apply rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-glass shadow-glass;
+  }
+
+  .mesh-bg {
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(46, 139, 255, 0.16), transparent 0 30%),
+      radial-gradient(circle at 80% 15%, rgba(255, 194, 71, 0.16), transparent 0 24%),
+      radial-gradient(circle at 65% 80%, rgba(34, 197, 94, 0.12), transparent 0 26%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 60%);
+  }
+
+  .noise-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+}
+
+/* Accessibility Modes */
+html.large-text {
+  font-size: 18px; /* Scales all rem-based sizes in Tailwind */
+}
+
+@media (min-width: 768px) {
+  html.large-text {
+    font-size: 20px;
+  }
+}
+
+html.high-contrast {
+  filter: contrast(1.22) saturate(1.1);
+}
+
+html.high-contrast * {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+}
