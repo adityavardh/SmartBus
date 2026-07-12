@@ -21,7 +21,9 @@ interface AuthState {
   isLoading: boolean;
   role: UserRole;
   user: UserProfile;
-  login: (role: UserRole) => void;
+  registeredUsers: UserProfile[];
+  login: (role: UserRole, email?: string) => void;
+  signup: (user: UserProfile) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -57,18 +59,41 @@ interface AppState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       isAuthenticated: false,
       isLoading: false,
       role: "student",
       user: CURRENT_USER,
-      login: (role) => {
+      registeredUsers: [],
+      login: (role, email) => {
+        const { registeredUsers } = get();
         let selectedUser = CURRENT_USER;
-        if (role === "parent") selectedUser = PARENT_USER;
-        if (role === "driver") selectedUser = DRIVER_USER;
-        if (role === "admin") selectedUser = ADMIN_USER;
+        
+        if (email) {
+          const found = registeredUsers.find(u => u.email === email && u.role === role);
+          if (found) {
+            selectedUser = found;
+          } else {
+            if (role === "parent") selectedUser = PARENT_USER;
+            if (role === "driver") selectedUser = DRIVER_USER;
+            if (role === "admin") selectedUser = ADMIN_USER;
+          }
+        } else {
+          if (role === "parent") selectedUser = PARENT_USER;
+          if (role === "driver") selectedUser = DRIVER_USER;
+          if (role === "admin") selectedUser = ADMIN_USER;
+        }
         
         set({ isAuthenticated: true, role, user: selectedUser, isLoading: false });
+      },
+      signup: (user) => {
+        set((state) => ({
+          registeredUsers: [...state.registeredUsers, user],
+          isAuthenticated: true,
+          role: user.role,
+          user: user,
+          isLoading: false
+        }));
       },
       logout: () => set({ isAuthenticated: false }),
       setLoading: (loading) => set({ isLoading: loading }),

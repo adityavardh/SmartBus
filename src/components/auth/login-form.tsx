@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { UserRole } from "@/types";
-import { Chrome, GraduationCap, Lock, Mail, Shield, Sparkles, Truck, Users } from "lucide-react";
+import { Chrome, GraduationCap, Lock, Mail, Shield, Sparkles, Truck, Users, User } from "lucide-react";
 
 
 const ROLES: { role: UserRole; label: string; icon: React.ReactNode }[] = [
@@ -23,17 +23,35 @@ const ROLES: { role: UserRole; label: string; icon: React.ReactNode }[] = [
 
 export function LoginForm() {
   const router = useRouter();
-  const { login, setLoading, isLoading } = useAuthStore();
+  const { login, signup, setLoading, isLoading } = useAuthStore();
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [rememberMe, setRememberMe] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
+
   const { register, handleSubmit } = useForm({
-    defaultValues: { email: "adi@smartbus.io", password: "demo123" },
+    defaultValues: { name: "", email: "adi@smartbus.io", password: "demo123" },
   });
 
-  const onSubmit = () => {
+  const onSubmit = (data: any) => {
     setLoading(true);
     setTimeout(() => {
-      login(selectedRole);
+      if (isSignUp) {
+        signup({
+          id: crypto.randomUUID(),
+          name: data.name || "New User",
+          email: data.email,
+          role: selectedRole,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name || 'User'}&backgroundColor=0D1B36`,
+          streak: 0,
+          ecoScore: 0,
+          rewardPoints: 0,
+          tripsCompleted: 0,
+          achievements: [],
+          emergencyContacts: [],
+        });
+      } else {
+        login(selectedRole, data.email);
+      }
       
       const dashboardPath = getRoleDashboard(selectedRole);
       router.push(dashboardPath);
@@ -131,8 +149,8 @@ export function LoginForm() {
               >
                 <span className="text-2xl">🚌</span>
               </motion.div>
-              <h1 className="text-2xl font-semibold text-white">Welcome back</h1>
-              <p className="mt-1 text-white/45">Sign in to track buses in real time</p>
+              <h1 className="text-2xl font-semibold text-white">{isSignUp ? "Create an account" : "Welcome back"}</h1>
+              <p className="mt-1 text-white/45">{isSignUp ? "Sign up to start tracking buses" : "Sign in to track buses in real time"}</p>
             </div>
 
             <div className="mb-6 grid grid-cols-4 gap-2">
@@ -153,6 +171,15 @@ export function LoginForm() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <Input id="name" className="pl-10" placeholder="John Doe" {...register("name")} required={isSignUp} />
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -174,7 +201,7 @@ export function LoginForm() {
                   <Label htmlFor="remember" className="cursor-pointer text-xs">Remember Me</Label>
                 </div>
                 <button type="button" className="text-xs text-primary hover:underline">
-                  Forgot Password?
+                  {isSignUp ? "" : "Forgot Password?"}
                 </button>
               </div>
 
@@ -186,9 +213,15 @@ export function LoginForm() {
                     className="h-5 w-5 rounded-full border-2 border-background/30 border-t-background"
                   />
                 ) : (
-                  "Continue"
+                  isSignUp ? "Create Account" : "Continue"
                 )}
               </Button>
+              
+              <div className="text-center mt-4">
+                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-white/60 hover:text-white transition-colors">
+                  {isSignUp ? "Already have an account? Log in" : "New here? Create an account"}
+                </button>
+              </div>
             </form>
 
             <div className="relative my-6">
