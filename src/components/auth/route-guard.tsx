@@ -1,42 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/store";
-import { isRouteAllowed, getRoleDashboard } from "@/lib/auth";
+/**
+ * src/components/auth/route-guard.tsx
+ * ─────────────────────────────────────────────────────────────
+ * Client-side guard that mirrors the middleware protection.
+ * Uses NextAuth's useSession() — if unauthenticated, redirects
+ * to /login. Shows a loading state while the session resolves.
+ * ─────────────────────────────────────────────────────────────
+ */
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 
 export function RouteGuard({ children }: { children: React.ReactNode }) {
+  const { status } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
-  const { isAuthenticated, role } = useAuthStore();
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    // If not authenticated and not on login page, redirect to login
-    if (!isAuthenticated && pathname !== "/login") {
+    if (status === "unauthenticated") {
       router.push("/login");
-      return;
     }
+  }, [status, router]);
 
-    // If authenticated and on login page, redirect to their role dashboard
-    if (isAuthenticated && pathname === "/login") {
-      router.push(getRoleDashboard(role));
-      return;
-    }
+  // While NextAuth is checking the session, show a minimal spinner
+  if (status === "loading") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 rounded-full border-2 border-white/10 border-t-accent"
+        />
+      </div>
+    );
+  }
 
-    // If authenticated, check if they can access this route
-    if (isAuthenticated && !isRouteAllowed(role, pathname)) {
-      router.push("/unauthorized");
-      return;
-    }
-
-    setIsAuthorized(true);
-  }, [isAuthenticated, pathname, role, router]);
-
-  // Don't render children until we've checked authorization
-  // Exception for login page when not authenticated
-  if (!isAuthorized && pathname !== "/login") {
-    return null; // or a loading spinner
+  // Not authenticated yet — don't flash protected content
+  if (status === "unauthenticated") {
+    return null;
   }
 
   return <>{children}</>;

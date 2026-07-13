@@ -45,11 +45,13 @@ export function useDemoEngine() {
       const event = DEMO_EVENTS[index];
       if (!event) return;
 
-      addNotification({
-        type: event.type,
-        title: event.title,
-        message: event.message,
-      });
+      if (event.type !== "traffic") {
+        addNotification({
+          type: event.type,
+          title: event.title,
+          message: event.message,
+        });
+      }
 
       if (soundEnabled) {
         playNotificationSound(SOUND_MAP[event.type] ?? "info");

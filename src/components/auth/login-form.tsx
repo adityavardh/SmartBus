@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { getRoleDashboard } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "@/store";
@@ -23,39 +24,88 @@ const ROLES: { role: UserRole; label: string; icon: React.ReactNode }[] = [
 
 export function LoginForm() {
   const router = useRouter();
-  const { login, signup, setLoading, isLoading } = useAuthStore();
-  const [selectedRole, setSelectedRole] = useState<UserRole>("student");
+  const { setLoading, isLoading } = useAuthStore();
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const lastRole = localStorage.getItem("lastLoginRole") as UserRole;
+      if (lastRole && ROLES.find((r) => r.role === lastRole)) {
+        setSelectedRole(lastRole);
+      }
+    }
+  }, []);
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lastLoginRole", role);
+    }
+  };
   const [rememberMe, setRememberMe] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string; name?: string; auth?: string }>({});
 
   const { register, handleSubmit } = useForm({
     defaultValues: { name: "", email: "", password: "" },
   });
 
-  const onSubmit = (data: { name?: string; email: string; password?: string }) => {
+  const onSubmit = async (data: { name?: string; email: string; password?: string }) => {
+    if (!selectedRole) return;
+
+    // Client-side validation
+    const errors: { email?: string; password?: string; name?: string; auth?: string } = {};
+    if (!data.email || !data.email.trim()) errors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(data.email)) errors.email = "Enter a valid email address";
+    if (!data.password || !data.password.trim()) errors.password = "Password is required";
+    else if (isSignUp && (data.password?.length ?? 0) < 8)
+      errors.password = "Password must be at least 8 characters";
+    if (isSignUp && (!data.name || !data.name.trim())) errors.name = "Full name is required";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     setLoading(true);
-    setTimeout(() => {
-      if (isSignUp) {
-        signup({
-          id: crypto.randomUUID(),
-          name: data.name || "New User",
-          email: data.email,
-          role: selectedRole,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name || 'User'}&backgroundColor=0D1B36`,
-          streak: 0,
-          ecoScore: 0,
-          rewardPoints: 0,
-          tripsCompleted: 0,
-          achievements: [],
-          emergencyContacts: [],
-        });
-      } else {
-        login(selectedRole, data.email);
+
+    try {
+      // Call NextAuth's signIn with the credentials provider
+      const result = await signIn("credentials", {
+        email: data.email.trim().toLowerCase(),
+        password: data.password ?? "",
+        role: selectedRole,
+        name: data.name ?? "",
+        redirect: false, // handle redirect ourselves
+      });
+
+      if (result?.error) {
+        // Retrieve registered users from Zustand store to determine the type of error
+        const state = useAuthStore.getState();
+        const registeredUsers = state.registeredUsers || [];
+        const demoEmails = ["student@demo.com", "parent@demo.com", "driver@demo.com", "admin@demo.com"];
+        const emailExists = demoEmails.includes(data.email.trim().toLowerCase()) ||
+                            registeredUsers.some((u) => u.email.trim().toLowerCase() === data.email.trim().toLowerCase());
+
+        let errorMsg = "Incorrect email or password.";
+        if (!emailExists) {
+          errorMsg = "No account found with this email — please sign up first";
+        } else {
+          errorMsg = "Incorrect password";
+        }
+
+        setFormErrors({ auth: errorMsg });
+        setLoading(false);
+        return;
       }
-      
+
+      // Success — navigate to the role's dashboard
       const dashboardPath = getRoleDashboard(selectedRole);
       router.push(dashboardPath);
-    }, 1500);
+      router.refresh(); // re-run server components so session is available
+    } catch {
+      setFormErrors({ auth: "Something went wrong. Please try again." });
+      setLoading(false);
+    }
   };
 
   return (
@@ -157,7 +207,7 @@ export function LoginForm() {
               {ROLES.map(({ role, label, icon }) => (
                 <button
                   key={role}
-                  onClick={() => setSelectedRole(role)}
+                  onClick={() => handleRoleSelect(role)}
                   className={`flex flex-col items-center gap-1.5 rounded-[18px] border p-3 text-xs font-medium transition-all ${
                     selectedRole === role
                       ? "border-primary/25 bg-primary/20 text-white shadow-[0_0_0_1px_rgba(46,139,255,0.15)]"
@@ -171,28 +221,37 @@ export function LoginForm() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Auth-level error (wrong password, etc.) */}
+              {(formErrors as { auth?: string }).auth && (
+                <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                  {(formErrors as { auth?: string }).auth}
+                </div>
+              )}
               {isSignUp && (
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                    <Input id="name" className="pl-10" placeholder="John Doe" {...register("name")} required={isSignUp} />
+                    <Input id="name" className={`pl-10 ${formErrors.name ? 'border-danger/60' : ''}`} placeholder="John Doe" {...register("name")} />
                   </div>
+                  {formErrors.name && <p className="text-xs text-danger mt-1">{formErrors.name}</p>}
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <Input id="email" className="pl-10" {...register("email")} />
+                  <Input id="email" className={`pl-10 ${formErrors.email ? 'border-danger/60' : ''}`} {...register("email")} />
                 </div>
+                {formErrors.email && <p className="text-xs text-danger mt-1">{formErrors.email}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <Input id="password" type="password" className="pl-10" {...register("password")} />
+                  <Input id="password" type="password" className={`pl-10 ${formErrors.password ? 'border-danger/60' : ''}`} {...register("password")} />
                 </div>
+                {formErrors.password && <p className="text-xs text-danger mt-1">{formErrors.password}</p>}
               </div>
 
               <div className="flex items-center justify-between">
@@ -205,7 +264,7 @@ export function LoginForm() {
                 </button>
               </div>
 
-              <Button type="submit" variant="accent" className="h-12 w-full" disabled={isLoading}>
+              <Button type="submit" variant="accent" className="h-12 w-full" disabled={isLoading || !selectedRole}>
                 {isLoading ? (
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -234,7 +293,7 @@ export function LoginForm() {
             </div>
 
             <div className="grid gap-3">
-              <Button variant="glass" className="h-12 w-full">
+              <Button type="button" onClick={() => signIn("google")} variant="glass" className="h-12 w-full">
                 <Chrome className="w-4 h-4" />
                 Login with Google
               </Button>

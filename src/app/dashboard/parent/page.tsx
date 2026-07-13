@@ -97,10 +97,20 @@ export default function ParentDashboard() {
                   <Bell className="w-5 h-5 text-[#8b5cf6]" />
                   Recent Updates
                 </h3>
-                <div className="space-y-4">
-                  <NotificationItem time="08:12 AM" text={`${child.name} boarded the bus at ${child.boardedStop}`} />
-                  <NotificationItem time="07:45 AM" text="Bus departed from depot" />
-                  <NotificationItem time="Yesterday" text={`${child.name} reached home safely`} />
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Today</h4>
+                    <div className="space-y-4">
+                      <NotificationItem time="08:12 AM" text={`${child.name} boarded the bus at ${child.boardedStop}`} />
+                      <NotificationItem time="07:45 AM" text="Bus departed from depot" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Earlier</h4>
+                    <div className="space-y-4">
+                      <NotificationItem time="Yesterday" text={`${child.name} reached home safely`} />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

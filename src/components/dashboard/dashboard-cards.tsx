@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDemoStore, useAuthStore } from "@/store";
-import { CURRENT_BUS, CURRENT_DRIVER, WEATHER, TRIP_TIMELINE } from "@/data/mock";
+import { CURRENT_BUS, CURRENT_DRIVER, WEATHER, TRIP_TIMELINE, DEFAULT_DEMO } from "@/data/mock";
 import type { TripEvent } from "@/types";
 import { useAnimatedCounter } from "@/hooks/use-animations";
 import { getGreeting, formatETA, formatDistance, formatSpeed, speak } from "@/lib/utils";
@@ -32,8 +32,11 @@ import Link from "next/link";
 export function DashboardHero() {
   const { demo } = useDemoStore();
   const { user } = useAuthStore();
+  // Fall back to DEFAULT_DEMO values when persisted state has stale 0s
+  const displaySpeed = demo.speed > 0 ? demo.speed : DEFAULT_DEMO.speed;
+  const displayDistance = demo.distance > 0 ? demo.distance : DEFAULT_DEMO.distance;
   const eta = useAnimatedCounter(demo.eta);
-  const speed = useAnimatedCounter(demo.speed);
+  const speed = useAnimatedCounter(displaySpeed);
   const attendance = useAnimatedCounter(demo.attendance);
 
   return (
@@ -81,7 +84,7 @@ export function DashboardHero() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <StatBlock icon={<Clock className="w-4 h-4 text-accent" />} label="ETA" value={formatETA(eta)} highlight />
-              <StatBlock icon={<MapPin className="w-4 h-4 text-primary" />} label="Distance" value={formatDistance(demo.distance)} />
+              <StatBlock icon={<MapPin className="w-4 h-4 text-primary" />} label="Distance" value={formatDistance(displayDistance)} />
               <StatBlock icon={<Gauge className="w-4 h-4 text-success" />} label="Speed" value={formatSpeed(speed)} />
               <StatBlock icon={<Users className="w-4 h-4 text-primary" />} label="Onboard" value={`${attendance} Students`} />
             </div>
@@ -98,7 +101,7 @@ export function DashboardHero() {
                   <span className="text-xs text-white/50">{CURRENT_DRIVER.rating} • Driver</span>
                 </div>
               </div>
-              <Link href="/map">
+              <Link href="/map/student">
                 <Button variant="accent" size="sm">
                   <Navigation className="w-4 h-4" />
                   Track Live

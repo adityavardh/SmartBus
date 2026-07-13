@@ -114,9 +114,14 @@ export default function DriverAttendancePage() {
                         <Check className="w-5 h-5" />
                       </div>
                     ) : (
-                      <Button variant="outline" className="h-10 border-white/20 hover:bg-accent/20 hover:text-accent hover:border-accent/50">
-                        Mark Present
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" className="h-10 border-white/20 hover:bg-danger/20 hover:text-danger hover:border-danger/50">
+                          Absent
+                        </Button>
+                        <Button variant="outline" className="h-10 border-white/20 hover:bg-accent/20 hover:text-accent hover:border-accent/50">
+                          Present
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>

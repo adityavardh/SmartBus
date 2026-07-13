@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDemoStore, useNotificationStore, useSettingsStore } from "@/store";
 import { speak } from "@/lib/utils";
 import confetti from "canvas-confetti";
+import { usePathname } from "next/navigation";
 import {
   Sparkles,
   X,
@@ -26,6 +27,9 @@ export function DemoModeToggle() {
   const addNotification = useNotificationStore((s) => s.addNotification);
   const voiceEnabled = useSettingsStore((s) => s.settings.voiceAnnouncements);
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname !== "/dashboard/admin" && pathname !== "/dashboard/driver") return null;
 
   const toggleRain = (checked: boolean) => {
     updateDemo({ isRaining: checked });
@@ -135,10 +139,9 @@ export function DemoModeToggle() {
 
   return (
     <>
-      {/* Floating control activator */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 left-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full border backdrop-blur-xl transition-all shadow-float ${
+        className={`fixed bottom-24 right-4 xl:bottom-6 xl:right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full border backdrop-blur-xl transition-all shadow-float ${
           demo.enabled
             ? "bg-accent/20 border-accent/40 text-accent shadow-glow-accent"
             : "bg-card/80 border-white/10 text-white/60 hover:text-white"

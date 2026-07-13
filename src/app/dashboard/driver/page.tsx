@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,25 @@ import {
 export default function DriverDashboard() {
   const { user } = useAuthStore();
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const [tripStatus, setTripStatus] = useState<"idle" | "in_progress" | "completed">("idle");
+  const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
+
+  const showToast = (message: string, color: string) => {
+    setToast({ message, color });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleStartTrip = () => {
+    if (tripStatus === "in_progress") return;
+    setTripStatus("in_progress");
+    showToast("🟢 Trip started — SB-12 is now en route", "bg-success/20 border-success/30 text-success");
+  };
+
+  const handleEndTrip = () => {
+    if (tripStatus !== "in_progress") return;
+    setTripStatus("completed");
+    showToast("✅ Trip ended — Route complete. Have a great day!", "bg-primary/20 border-primary/30 text-primary");
+  };
 
   return (
     <AppLayout>
@@ -41,11 +61,37 @@ export default function DriverDashboard() {
 
         {/* Trip controls */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <ActionButton icon={<Play className="w-6 h-6" />} label="Start Trip" color="bg-success/20 text-success border-success/30 hover:bg-success/30" />
-          <ActionButton icon={<Square className="w-6 h-6" />} label="End Trip" color="bg-white/5 text-white/50 border-white/10 hover:bg-white/10" />
-          <ActionButton icon={<Coffee className="w-6 h-6" />} label="Take Break" color="bg-white/5 text-white/50 border-white/10 hover:bg-white/10" />
-          <ActionButton icon={<AlertTriangle className="w-6 h-6" />} label="Emergency SOS" color="bg-danger/20 text-danger border-danger/30 hover:bg-danger/30" />
+          <ActionButton
+            icon={<Play className="w-6 h-6" />}
+            label="Start Trip"
+            color={tripStatus === "in_progress"
+              ? "bg-success/30 text-success border-success/50 cursor-not-allowed opacity-60"
+              : "bg-success/20 text-success border-success/30 hover:bg-success/30"}
+            onClick={handleStartTrip}
+            disabled={tripStatus === "in_progress" || tripStatus === "completed"}
+          />
+          <ActionButton
+            icon={<Square className="w-6 h-6" />}
+            label="End Trip"
+            color={tripStatus !== "in_progress"
+              ? "bg-white/5 text-white/30 border-white/10 cursor-not-allowed opacity-50"
+              : "bg-danger/20 text-danger border-danger/30 hover:bg-danger/30"}
+            onClick={handleEndTrip}
+            disabled={tripStatus !== "in_progress"}
+          />
+          <ActionButton icon={<Coffee className="w-6 h-6" />} label="Take Break" color="bg-white/5 text-white/50 border-white/10 hover:bg-white/10" onClick={() => showToast("☕ Break logged", "bg-white/10 border-white/20 text-white")} />
+          <ActionButton icon={<AlertTriangle className="w-6 h-6" />} label="Emergency SOS" color="bg-danger/20 text-danger border-danger/30 hover:bg-danger/30" onClick={() => showToast("🚨 SOS alert sent to dispatch!", "bg-danger/20 border-danger/30 text-danger")} />
         </div>
+
+        {/* Trip Status indicator */}
+        {tripStatus !== "idle" && (
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-sm font-medium ${
+            tripStatus === "completed" ? "bg-primary/10 border-primary/30 text-primary" : "bg-success/10 border-success/30 text-success"
+          }`}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: tripStatus === "completed" ? "#2E8BFF" : "#22C55E" }} />
+            {tripStatus === "in_progress" ? "Trip In Progress — SB-12 is live on Route A" : "Trip Completed — Route A finished"}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -56,8 +102,12 @@ export default function DriverDashboard() {
                     <MapPin className="w-5 h-5 text-accent" />
                     Live Route Progress
                   </h3>
-                  <span className="px-3 py-1 bg-accent/20 text-accent text-xs font-medium rounded-full border border-accent/20">
-                    In Progress
+                  <span className={`px-3 py-1 text-xs font-medium rounded-full border ${
+                    tripStatus === "in_progress" ? "bg-success/20 text-success border-success/20" :
+                    tripStatus === "completed" ? "bg-primary/20 text-primary border-primary/20" :
+                    "bg-accent/20 text-accent border-accent/20"
+                  }`}>
+                    {tripStatus === "in_progress" ? "In Progress" : tripStatus === "completed" ? "Completed" : "Standby"}
                   </span>
                 </div>
                 
@@ -117,15 +167,37 @@ export default function DriverDashboard() {
         </div>
       </div>
       <MobileNav />
+
+      {/* Toast feedback */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl border backdrop-blur-xl shadow-float text-sm font-semibold ${toast.color}`}
+          >
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 }
 
-function ActionButton({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
+function ActionButton({ icon, label, color, onClick, disabled }: {
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={disabled ? undefined : { scale: 1.02 }}
+      whileTap={disabled ? undefined : { scale: 0.98 }}
+      onClick={onClick}
+      disabled={disabled}
       className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all ${color}`}
     >
       {icon}

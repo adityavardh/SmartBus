@@ -1,18 +1,39 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { PartyPopper, X, CloudRain, WifiOff, Navigation, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { PartyPopper, X, CloudRain, WifiOff, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useDemoStore } from "@/store";
+import { WEATHER } from "@/data/mock";
 
 export function StatusBanners() {
   const { demo } = useDemoStore();
-  const [holidayDismissed, setHolidayDismissed] = useState(false);
+  const pathname = usePathname();
+  const [holidayDismissed, setHolidayDismissed] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dismissed = sessionStorage.getItem("holidayBannerDismissed");
+      if (!dismissed) {
+        setHolidayDismissed(false);
+      }
+    }
+  }, []);
+
+  const dismissHoliday = () => {
+    setHolidayDismissed(true);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("holidayBannerDismissed", "true");
+    }
+  };
+
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   return (
     <>
       <AnimatePresence>
-        {!holidayDismissed && (
+        {!holidayDismissed && isDashboard && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -25,7 +46,7 @@ export function StatusBanners() {
                 <p className="text-sm font-medium text-white">Summer Break Schedule Active</p>
                 <p className="text-xs text-white/50">Modified routes in effect until July 20</p>
               </div>
-              <button onClick={() => setHolidayDismissed(true)} className="text-white/30 hover:text-white">
+              <button onClick={dismissHoliday} className="text-white/30 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -34,7 +55,7 @@ export function StatusBanners() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {demo.isRaining && (
+        {demo.isRaining && WEATHER.condition.toLowerCase().includes("rain") && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -43,20 +64,6 @@ export function StatusBanners() {
           >
             <CloudRain className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-primary">Rain Mode — ETA adjusted</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {demo.enabled && demo.trafficLevel === "heavy" && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="fixed top-20 right-4 z-[55] flex items-center gap-2 rounded-full border border-accent/30 bg-accent/15 px-4 py-2 backdrop-blur-xl"
-          >
-            <Navigation className="w-4 h-4 text-accent" />
-            <span className="text-xs font-medium text-accent">Traffic Mode Active</span>
           </motion.div>
         )}
       </AnimatePresence>

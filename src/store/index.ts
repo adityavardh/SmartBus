@@ -22,7 +22,7 @@ interface AuthState {
   role: UserRole;
   user: UserProfile;
   registeredUsers: UserProfile[];
-  login: (role: UserRole, email?: string) => void;
+  login: (role: UserRole, email?: string, name?: string) => void;
   signup: (user: UserProfile) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
@@ -65,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
       role: "student",
       user: CURRENT_USER,
       registeredUsers: [],
-      login: (role, email) => {
+      login: (role, email, name) => {
         const { registeredUsers } = get();
         let selectedUser = CURRENT_USER;
         
@@ -74,14 +74,23 @@ export const useAuthStore = create<AuthState>()(
           if (found) {
             selectedUser = found;
           } else {
-            if (role === "parent") selectedUser = PARENT_USER;
-            if (role === "driver") selectedUser = DRIVER_USER;
-            if (role === "admin") selectedUser = ADMIN_USER;
+            if (role === "parent") selectedUser = { ...PARENT_USER };
+            if (role === "driver") selectedUser = { ...DRIVER_USER };
+            if (role === "admin") selectedUser = { ...ADMIN_USER };
+            if (role === "student") selectedUser = { ...CURRENT_USER };
           }
+          // Override fake data with real session data
+          selectedUser = {
+            ...selectedUser,
+            email: email,
+            name: name || selectedUser.name,
+            avatar: selectedUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}&backgroundColor=0D1B36`
+          };
         } else {
           if (role === "parent") selectedUser = PARENT_USER;
           if (role === "driver") selectedUser = DRIVER_USER;
           if (role === "admin") selectedUser = ADMIN_USER;
+          if (role === "student") selectedUser = CURRENT_USER;
         }
         
         set({ isAuthenticated: true, role, user: selectedUser, isLoading: false });

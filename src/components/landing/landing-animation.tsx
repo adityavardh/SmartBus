@@ -18,7 +18,18 @@ const ROLE_PILLS = ["Student", "Parent", "Driver", "Admin"];
 export function LandingAnimation() {
   const router = useRouter();
   const [phase, setPhase] = useState(0);
-  const [activeRole, setActiveRole] = useState(0);
+  const [activeRole, setActiveRole] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Set initial from localStorage, if any
+    if (typeof window !== "undefined") {
+      const storedRole = localStorage.getItem("lastLoginRole");
+      if (storedRole) {
+        const idx = ROLE_PILLS.findIndex((r) => r.toLowerCase() === storedRole.toLowerCase());
+        if (idx !== -1) setActiveRole(idx);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const timers = [
@@ -33,7 +44,7 @@ export function LandingAnimation() {
 
   // Cycle role pills
   useEffect(() => {
-    const iv = setInterval(() => setActiveRole((p) => (p + 1) % ROLE_PILLS.length), 2200);
+    const iv = setInterval(() => setActiveRole((p) => ((p ?? -1) + 1) % ROLE_PILLS.length), 2200);
     return () => clearInterval(iv);
   }, []);
 

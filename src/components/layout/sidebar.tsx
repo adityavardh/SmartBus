@@ -27,6 +27,7 @@ import { useAppStore, useAuthStore } from "@/store";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserRole } from "@/types";
 import { RouteGuard } from "@/components/auth/route-guard";
+import { signOut } from "next-auth/react";
 
 const ROLE_NAV: Record<UserRole, { href: string; label: string; icon: React.ElementType }[]> = {
   student: [
@@ -78,7 +79,7 @@ const ROLE_THEME: Record<UserRole, { primary: string, accent: string, border: st
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen, setSearchOpen } = useAppStore();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   
   const navItems = ROLE_NAV[user.role] || ROLE_NAV.student;
   const theme = ROLE_THEME[user.role] || ROLE_THEME.student;
@@ -88,14 +89,14 @@ export function Sidebar() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <motion.aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-80 border-r border-white/10 bg-card/85 backdrop-blur-2xl flex flex-col transition-transform duration-300 lg:translate-x-0 shadow-[18px_0_80px_rgba(0,0,0,0.24)]",
+          "fixed top-0 left-0 z-50 h-full w-80 border-r border-white/10 bg-card/85 backdrop-blur-2xl flex flex-col transition-transform duration-300 xl:translate-x-0 shadow-[18px_0_80px_rgba(0,0,0,0.24)]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -108,7 +109,7 @@ export function Sidebar() {
               Smart<span className={theme.primary.split(' ')[0]}>Bus</span>
             </span>
           </Link>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/40 hover:text-white transition-colors">
+          <button onClick={() => setSidebarOpen(false)} className="xl:hidden text-white/40 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -156,7 +157,7 @@ export function Sidebar() {
               <p className="text-sm font-medium text-white truncate">{user.name}</p>
               <p className="text-xs text-white/40 capitalize">{user.role}</p>
             </div>
-            <button onClick={logout} className="text-white/30 hover:text-danger transition-colors">
+            <button onClick={() => signOut({ callbackUrl: "/" })} className="text-white/30 hover:text-danger transition-colors">
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -174,11 +175,11 @@ export function TopBar() {
     <header className="sticky top-0 z-30 flex items-center justify-between px-4 lg:px-8 py-4 border-b border-white/8 bg-background/70 backdrop-blur-2xl">
       <button
         onClick={() => setSidebarOpen(true)}
-        className="lg:hidden text-white/60 hover:text-white"
+        className="xl:hidden text-white/60 hover:text-white"
       >
         <Menu className="w-5 h-5" />
       </button>
-      <div className="hidden lg:flex items-center gap-3 text-sm text-white/45">
+      <div className="hidden xl:flex items-center gap-3 text-sm text-white/45">
         <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
         <span>Live GPS syncing</span>
       </div>
@@ -201,7 +202,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <RouteGuard>
       <div className="min-h-screen relative">
         <Sidebar />
-        <div className="lg:pl-80 relative z-10">
+        <div className="xl:pl-80 relative z-10">
           <TopBar />
           <main>{children}</main>
         </div>
@@ -217,7 +218,7 @@ export function MobileNav() {
   const theme = ROLE_THEME[user.role] || ROLE_THEME.student;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-white/10 bg-card/90 backdrop-blur-2xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 xl:hidden border-t border-white/10 bg-card/90 backdrop-blur-2xl">
       <div className="flex items-center justify-around py-2 px-2">
         {items.map((item) => {
           const active = pathname === item.href;

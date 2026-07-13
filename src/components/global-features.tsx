@@ -9,12 +9,14 @@ import { AIAssistant } from "@/components/ai/ai-assistant";
 import { SearchModal } from "@/components/search/search-modal";
 import { StatusBanners } from "@/components/effects/status-banners";
 import { AccessibilityProvider } from "@/components/accessibility-provider";
+import { SessionSync } from "@/components/auth/session-sync";
 
 export function GlobalFeatures() {
   useDemoEngine();
 
   return (
     <>
+      <SessionSync />
       <AccessibilityProvider />
       <BackgroundEffects />
       <CursorGlow />
