@@ -3,16 +3,20 @@
 import { motion } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MAIN_ROUTE } from "@/data/mock";
+import { useLocationStore, selectRoute, selectSchool, selectStudent } from "@/store/locationStore";
 import { Navigation, Clock, CheckCircle2 } from "lucide-react";
 
 export default function StudentRoutePage() {
+  const route = useLocationStore(selectRoute);
+  const school = useLocationStore(selectSchool);
+  const student = useLocationStore(selectStudent);
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-8 pb-24 lg:pb-8 space-y-6 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-white mb-2">My Route Details</h1>
-          <p className="text-white/50">{MAIN_ROUTE.name}</p>
+          <p className="text-white/50">{route.name}</p>
         </motion.div>
 
         <Card>
@@ -22,31 +26,45 @@ export default function StudentRoutePage() {
                 <Navigation className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-white font-medium">{MAIN_ROUTE.school}</p>
-                <p className="text-xs text-white/50">Final Destination</p>
+                <p className="text-white font-medium">{school.name}</p>
+                <p className="text-xs text-white/50">Final Destination • {school.type}</p>
               </div>
             </div>
 
             <div className="relative pl-8 space-y-8 before:absolute before:inset-y-4 before:left-[15px] before:w-0.5 before:bg-white/10">
-              {MAIN_ROUTE.stops.map((stop) => (
+              {route.stops.map((stop) => (
                 <div key={stop.id} className="relative">
-                  <div className={`absolute -left-10 w-4 h-4 rounded-full border-[3px] flex items-center justify-center bg-card ${
-                    stop.status === 'completed' ? 'border-success' : 
-                    stop.status === 'current' ? 'border-accent shadow-[0_0_12px_rgba(255,194,71,0.5)]' : 
-                    'border-white/30'
-                  }`}>
-                    {stop.status === 'completed' && <CheckCircle2 className="w-3 h-3 text-success absolute" />}
+                  <div
+                    className={`absolute -left-10 w-4 h-4 rounded-full border-[3px] flex items-center justify-center bg-card ${
+                      stop.status === "completed"
+                        ? "border-success"
+                        : stop.status === "current"
+                          ? "border-accent shadow-[0_0_12px_rgba(255,194,71,0.5)]"
+                          : "border-white/30"
+                    }`}
+                  >
+                    {stop.status === "completed" && (
+                      <CheckCircle2 className="w-3 h-3 text-success absolute" />
+                    )}
                   </div>
-                  
-                  <div className={`p-5 rounded-2xl border transition-all ${
-                    stop.status === 'current' ? 'bg-accent/5 border-accent/30' : 'bg-white/5 border-white/5 hover:bg-white/10'
-                  }`}>
+
+                  <div
+                    className={`p-5 rounded-2xl border transition-all ${
+                      stop.status === "current"
+                        ? "bg-accent/5 border-accent/30"
+                        : "bg-white/5 border-white/5 hover:bg-white/10"
+                    }`}
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className={`text-lg font-semibold ${stop.status === 'current' ? 'text-accent' : 'text-white'}`}>
+                        <h3
+                          className={`text-lg font-semibold ${
+                            stop.status === "current" ? "text-accent" : "text-white"
+                          }`}
+                        >
                           {stop.name}
                         </h3>
-                        {stop.name === "Saket District Centre" && (
+                        {stop.name === student.stopName && (
                           <span className="inline-block px-2 py-0.5 mt-1 rounded text-[10px] uppercase tracking-wider font-bold bg-primary/20 text-primary">
                             Your Stop
                           </span>

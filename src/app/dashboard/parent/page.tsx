@@ -5,13 +5,14 @@ import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CHILD_DATA } from "@/data/mock";
+import { useLocationStore, selectChild, selectDriver } from "@/store/locationStore";
 import { Phone, MapPin, Bus, Bell, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { LiveMap } from "@/components/map/live-map";
 
 export default function ParentDashboard() {
-  const child = CHILD_DATA;
+  const child = useLocationStore(selectChild);
+  const driver = useLocationStore(selectDriver);
 
   return (
     <AppLayout>
@@ -33,7 +34,7 @@ export default function ParentDashboard() {
                   <div className="flex-1 text-center sm:text-left">
                     <h2 className="text-2xl font-bold text-white">{child.name}</h2>
                     <p className="text-white/50 mb-4">{child.class} • Seat {child.seatNumber}</p>
-                    
+
                     <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                       {child.boarded ? (
                         <div className="px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-success text-sm flex items-center gap-2">
@@ -44,7 +45,7 @@ export default function ParentDashboard() {
                           Waiting for bus
                         </div>
                       )}
-                      
+
                       <div className="px-3 py-1.5 rounded-full bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#8b5cf6] text-sm flex items-center gap-2">
                         <MapPin className="w-4 h-4" /> Dest: School
                       </div>
@@ -77,12 +78,14 @@ export default function ParentDashboard() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Assigned Driver</h3>
                 <div className="flex items-center gap-4 p-4 rounded-[22px] bg-white/5 border border-white/10">
-                  <div className="w-12 h-12 rounded-xl bg-[#8b5cf6]/20 flex items-center justify-center text-xl">
-                    👨‍✈️
-                  </div>
+                  <Avatar className="w-12 h-12 ring-2 ring-[#8b5cf6]/30">
+                    <AvatarImage src={driver.photo} />
+                    <AvatarFallback>{driver.name[0]}</AvatarFallback>
+                  </Avatar>
                   <div className="flex-1">
-                    <p className="font-semibold text-white">{child.driverName}</p>
-                    <p className="text-xs text-white/50">{child.busNumber}</p>
+                    <p className="font-semibold text-white">{driver.name}</p>
+                    <p className="text-xs text-white/50">{child.busNumber} • {driver.rating}★</p>
+                    <p className="text-xs text-white/40">{driver.experience} experience</p>
                   </div>
                   <Button variant="glass" size="icon" className="rounded-full shrink-0">
                     <Phone className="w-4 h-4 text-white" />
@@ -101,8 +104,13 @@ export default function ParentDashboard() {
                   <div>
                     <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Today</h4>
                     <div className="space-y-4">
-                      <NotificationItem time="08:12 AM" text={`${child.name} boarded the bus at ${child.boardedStop}`} />
-                      <NotificationItem time="07:45 AM" text="Bus departed from depot" />
+                      {child.boarded && child.boardedAt && (
+                        <NotificationItem
+                          time={child.boardedAt}
+                          text={`${child.name} boarded the bus at ${child.boardedStop}`}
+                        />
+                      )}
+                      <NotificationItem time="—" text="Bus departed from depot" />
                     </div>
                   </div>
                   <div>
@@ -122,7 +130,7 @@ export default function ParentDashboard() {
   );
 }
 
-function NotificationItem({ time, text }: { time: string, text: string }) {
+function NotificationItem({ time, text }: { time: string; text: string }) {
   return (
     <div className="flex gap-3">
       <div className="mt-1 w-2 h-2 rounded-full bg-[#8b5cf6] shadow-[0_0_8px_rgba(139,92,246,0.5)] shrink-0" />

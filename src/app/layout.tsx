@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { GlobalFeatures } from "@/components/global-features";
 import { Analytics } from "@vercel/analytics/react";
+import { cn } from "@/lib/utils";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
       <body
   className={`${inter.variable} font-sans min-h-screen bg-background text-white antialiased`}
   style={{ colorScheme: "dark" }}

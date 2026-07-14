@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDemoStore, useAuthStore } from "@/store";
-import { CURRENT_BUS, CURRENT_DRIVER, WEATHER, TRIP_TIMELINE, DEFAULT_DEMO } from "@/data/mock";
+import { WEATHER, DEFAULT_DEMO } from "@/data/mock";
+import { useLocationStore, selectBus, selectDriver, selectRoute } from "@/store/locationStore";
 import type { TripEvent } from "@/types";
 import { useAnimatedCounter } from "@/hooks/use-animations";
 import { getGreeting, formatETA, formatDistance, formatSpeed, speak } from "@/lib/utils";
@@ -29,10 +30,15 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+// ─── DashboardHero ────────────────────────────────────────────────────────────
+
 export function DashboardHero() {
   const { demo } = useDemoStore();
   const { user } = useAuthStore();
-  // Fall back to DEFAULT_DEMO values when persisted state has stale 0s
+  const bus = useLocationStore(selectBus);
+  const driver = useLocationStore(selectDriver);
+  const route = useLocationStore(selectRoute);
+
   const displaySpeed = demo.speed > 0 ? demo.speed : DEFAULT_DEMO.speed;
   const displayDistance = demo.distance > 0 ? demo.distance : DEFAULT_DEMO.distance;
   const eta = useAnimatedCounter(demo.eta);
@@ -73,8 +79,10 @@ export function DashboardHero() {
                   <Bus className="w-5 h-5 text-accent" />
                   <span className="text-sm text-white/50">Current Bus</span>
                 </div>
-                <h2 className="text-3xl font-bold text-white">{CURRENT_BUS.number}</h2>
-                <p className="text-sm text-white/45 mt-1">{CURRENT_DRIVER.name} • {CURRENT_DRIVER.rating}★ • Route A</p>
+                <h2 className="text-3xl font-bold text-white">{bus.number}</h2>
+                <p className="text-sm text-white/45 mt-1">
+                  {driver.name} • {driver.rating}★ • {route.name.split("—")[0].trim()}
+                </p>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20 w-fit">
                 <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
@@ -91,14 +99,14 @@ export function DashboardHero() {
 
             <div className="mt-6 flex items-center gap-4 p-4 rounded-[22px] bg-white/6 border border-white/10">
               <Avatar className="w-12 h-12 ring-2 ring-accent/30">
-                <AvatarImage src={CURRENT_DRIVER.photo} />
-                <AvatarFallback>RS</AvatarFallback>
+                <AvatarImage src={driver.photo} />
+                <AvatarFallback>{driver.name[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="text-sm font-medium text-white">{CURRENT_DRIVER.name}</p>
+                <p className="text-sm font-medium text-white">{driver.name}</p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3 h-3 text-accent fill-accent" />
-                  <span className="text-xs text-white/50">{CURRENT_DRIVER.rating} • Driver</span>
+                  <span className="text-xs text-white/50">{driver.rating} • Driver</span>
                 </div>
               </div>
               <Link href="/map/student">
@@ -137,9 +145,12 @@ function StatBlock({
   );
 }
 
+// ─── LiveBusCard ──────────────────────────────────────────────────────────────
+
 export function LiveBusCard() {
   const { demo } = useDemoStore();
-  const bus = CURRENT_BUS;
+  const bus = useLocationStore(selectBus);
+  const driver = useLocationStore(selectDriver);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [calling, setCalling] = useState(false);
@@ -152,7 +163,7 @@ export function LiveBusCard() {
 
   const handleCall = () => {
     setCalling(true);
-    speak(`Dialing driver ${CURRENT_DRIVER.name}`, true);
+    speak(`Dialing driver ${driver.name}`, true);
     setTimeout(() => setCalling(false), 4000);
   };
 
@@ -165,9 +176,7 @@ export function LiveBusCard() {
               <h3 className="text-lg font-semibold text-white">Live Bus Telemetry</h3>
               <p className="text-xs text-white/40">Real-time status updates</p>
             </div>
-            <button
-              className="text-xs px-3 py-1 rounded-full bg-white/6 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white transition-all"
-            >
+            <button className="text-xs px-3 py-1 rounded-full bg-white/6 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white transition-all">
               Auto-updating
             </button>
           </div>
@@ -241,24 +250,21 @@ export function LiveBusCard() {
                 </button>
               </div>
 
-              {/* Bus illustration drawing */}
+              {/* Bus illustration */}
               <div className="rounded-2xl border border-white/6 bg-[#071225]/60 p-4 mb-5 flex justify-center items-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,194,71,0.06),transparent_65%)]" />
                 <svg width="260" height="120" viewBox="0 0 400 180" className="relative z-10 opacity-95">
                   <motion.g animate={{ y: [0, -2, 0] }} transition={{ duration: 2, repeat: Infinity }}>
                     <rect x="40" y="40" width="320" height="90" rx="20" fill="#FFC247" />
-                    {/* Glass windows */}
                     <rect x="60" y="55" width="45" height="35" rx="8" fill="#071225" opacity="0.3" />
                     <rect x="120" y="55" width="45" height="35" rx="8" fill="#071225" opacity="0.3" />
                     <rect x="180" y="55" width="45" height="35" rx="8" fill="#071225" opacity="0.3" />
                     <rect x="240" y="55" width="45" height="35" rx="8" fill="#071225" opacity="0.3" />
                     <rect x="300" y="55" width="40" height="35" rx="8" fill="#071225" opacity="0.3" />
-                    {/* Wheels */}
                     <circle cx="100" cy="135" r="22" fill="#111827" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
                     <circle cx="100" cy="135" r="8" fill="#9CA3AF" />
                     <circle cx="300" cy="135" r="22" fill="#111827" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
                     <circle cx="300" cy="135" r="8" fill="#9CA3AF" />
-                    {/* Details */}
                     <rect x="350" y="70" width="10" height="40" rx="3" fill="#071225" />
                     <circle cx="355" cy="80" r="2.5" fill="#FFF2C2" />
                     <line x1="40" y1="95" x2="360" y2="95" stroke="#FFFFFF" strokeWidth="2" opacity="0.15" />
@@ -269,16 +275,16 @@ export function LiveBusCard() {
                 </svg>
               </div>
 
-              {/* Specification Grid */}
+              {/* Spec grid */}
               <div className="grid grid-cols-2 gap-4 text-sm mb-5">
                 <DetailRow label="Registration No" value={bus.registration} />
                 <DetailRow label="Total Capacity" value={`${bus.capacity} Seats`} />
                 <DetailRow label="Insurance Status" value={bus.insurance} highlight />
                 <DetailRow label="Last Service Date" value={bus.lastService} />
                 <DetailRow label="Accumulated Mileage" value={`${bus.mileage.toLocaleString()} KM`} />
-                <DetailRow label="Health Score" value="Excellent (98%)" highlight />
-                <DetailRow label="Diagnostics" value="Healthy (0 Faults)" />
-                <DetailRow label="Next Service Due" value="15 Sep 2026 (770 KM)" />
+                <DetailRow label="Health Score" value={bus.healthStatus === "excellent" ? "Excellent (98%)" : bus.healthStatus === "good" ? "Good (85%)" : "Fair (65%)"} highlight />
+                <DetailRow label="Diagnostics" value={bus.engine === "healthy" ? "Healthy (0 Faults)" : "Warning — Check Engine"} />
+                <DetailRow label="Driver Rating" value={`${driver.rating}★ — ${driver.experience}`} />
               </div>
 
               <div className="p-3 rounded-2xl bg-white/5 border border-white/6 flex items-center gap-3">
@@ -335,6 +341,8 @@ function MetricItem({
   );
 }
 
+// ─── ETACountdown ─────────────────────────────────────────────────────────────
+
 export function ETACountdown() {
   const { demo } = useDemoStore();
 
@@ -373,13 +381,35 @@ export function ETACountdown() {
   );
 }
 
+// ─── TripTimeline ─────────────────────────────────────────────────────────────
+
 export function TripTimeline() {
+  const route = useLocationStore(selectRoute);
+
+  // Build a TripEvent[] from the city's route stops
+  const events: TripEvent[] = route.stops.map((stop, i) => ({
+    id: stop.id,
+    time: stop.time ?? `0${7 + i}:${(i * 15) % 60 === 0 ? "00" : i * 15} AM`,
+    title: i === 0 ? "Trip Started" : stop.name,
+    description:
+      i === 0
+        ? "Bus departed from depot"
+        : stop.studentsWaiting && stop.studentsWaiting > 0
+          ? `${stop.studentsWaiting} students waiting`
+          : stop.status === "current"
+            ? "Bus is here now"
+            : stop.status === "completed"
+              ? "Stop completed"
+              : "Upcoming stop",
+    status: stop.status ?? "upcoming",
+  }));
+
   return (
     <Card>
       <CardContent className="p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Live Timeline</h3>
         <div className="space-y-0">
-          {TRIP_TIMELINE.map((event: TripEvent, i: number) => (
+          {events.map((event: TripEvent, i: number) => (
             <div key={event.id} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div
@@ -387,17 +417,25 @@ export function TripTimeline() {
                     event.status === "completed"
                       ? "bg-success"
                       : event.status === "current"
-                      ? "bg-accent animate-pulse"
-                      : "bg-white/20"
+                        ? "bg-accent animate-pulse"
+                        : "bg-white/20"
                   }`}
                 />
-                {i < TRIP_TIMELINE.length - 1 && (
-                  <div className={`w-px flex-1 min-h-[40px] ${event.status === "completed" ? "bg-success/30" : "bg-white/10"}`} />
+                {i < events.length - 1 && (
+                  <div
+                    className={`w-px flex-1 min-h-[40px] ${
+                      event.status === "completed" ? "bg-success/30" : "bg-white/10"
+                    }`}
+                  />
                 )}
               </div>
               <div className="pb-6">
                 <p className="text-xs text-white/40">{event.time}</p>
-                <p className={`text-sm font-medium ${event.status === "current" ? "text-accent" : "text-white"}`}>
+                <p
+                  className={`text-sm font-medium ${
+                    event.status === "current" ? "text-accent" : "text-white"
+                  }`}
+                >
                   {event.title}
                 </p>
                 <p className="text-xs text-white/40">{event.description}</p>

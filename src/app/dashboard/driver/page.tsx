@@ -6,8 +6,8 @@ import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MAIN_ROUTE, CURRENT_BUS } from "@/data/mock";
 import { useAuthStore } from "@/store";
+import { useLocationStore, selectRoute, selectBus } from "@/store/locationStore";
 import { getGreeting } from "@/lib/utils";
 import {
   Play,
@@ -25,6 +25,8 @@ import {
 
 export default function DriverDashboard() {
   const { user } = useAuthStore();
+  const MAIN_ROUTE = useLocationStore(selectRoute);
+  const CURRENT_BUS = useLocationStore(selectBus);
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const [tripStatus, setTripStatus] = useState<"idle" | "in_progress" | "completed">("idle");
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);

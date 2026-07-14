@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "user-adityamarisa167@gmail.com",
+    "name": "ADI",
+    "email": "adityamarisa167@gmail.com",
+    "password": "avardhan24",
+    "role": "student",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=ADI&backgroundColor=2E8BFF"
+  }
+]
