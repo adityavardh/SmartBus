@@ -18,6 +18,7 @@
 import { create } from "zustand";
 import { CITY_DATABASE, DEFAULT_CITY_ID } from "@/data/cities";
 import { detectCity } from "@/services/locationService";
+import { clearRouteCache } from "@/services/osrmService";
 import { getSchoolForRoute } from "@/services/schoolService";
 import { getDriverForCity, getAllDriversForCity } from "@/services/driverService";
 import { getPrimaryBus, getAllBusesForCity, getFleetBuses } from "@/services/busService";
@@ -60,9 +61,16 @@ interface LocationState {
   // Route / map
   route: CityRouteData;
   school: SchoolData;
+  /** Straight-line waypoints derived from the city route definition.
+   *  Always available immediately — used as the fallback until OSRM resolves. */
   routeCoordinates: Coordinate[];
   routeBounds: MapBounds;
   routeGeoJSON: Feature<LineString>;
+
+  /** Road-snapped coordinates written back by useRoadRoute once OSRM resolves.
+   *  null until the first successful fetch for the current city.
+   *  useBusSimulation uses these for accurate distance calculations once available. */
+  snappedRouteCoordinates: Coordinate[] | null;
 
   // Entities
   driver: DriverProfile;
@@ -77,11 +85,14 @@ interface LocationState {
   // Actions
   initLocation: () => Promise<void>;
   setUserLocation: (loc: UserLocation) => void;
+  /** Called by useRoadRoute once OSRM returns a road-snapped geometry. */
+  setSnappedRouteCoordinates: (coords: Coordinate[]) => void;
 }
 
 // ─── Derived helpers ──────────────────────────────────────────────────────────
 
 function buildStateForCity(cityId: string, _userLocation: UserLocation) {
+  void _userLocation; // reserved for future per-user proximity logic
   const city = CITY_DATABASE[cityId] ?? CITY_DATABASE[DEFAULT_CITY_ID];
 
   // Pick the first route in the city by default
@@ -156,6 +167,9 @@ export const useLocationStore = create<LocationState>((set, get) => ({
 
   ...defaultCityState,
 
+  // Road-snapped coordinates start null; populated by useRoadRoute
+  snappedRouteCoordinates: null,
+
   // ── initLocation ──────────────────────────────────────────────────────────
   initLocation: async () => {
     // Idempotent — only run once per session
@@ -173,8 +187,13 @@ export const useLocationStore = create<LocationState>((set, get) => ({
         isLoading: false,
         userLocation: result.userLocation,
         locationPermission: result.permission,
+        // Clear snapped coords AND the OSRM module cache so the corrected
+        // path waypoints are re-fetched for the new city.
+        snappedRouteCoordinates: null,
         ...cityState,
       });
+      // Flush OSRM cache after state is set so useRoadRoute re-fetches
+      clearRouteCache();
     } catch (err) {
       // Graceful fallback — use default city but mark as ready
       set({
@@ -189,19 +208,74 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   setUserLocation: (loc: UserLocation) => {
     set({ userLocation: loc });
   },
+
+  // ── setSnappedRouteCoordinates ────────────────────────────────────────────
+  // Called by useRoadRoute once OSRM resolves for the current city.
+  // useBusSimulation will use these for more accurate distance calculations.
+  setSnappedRouteCoordinates: (coords: Coordinate[]) => {
+    set({ snappedRouteCoordinates: coords });
+  },
 }));
 
 // ─── Convenience selectors ────────────────────────────────────────────────────
 
-export const selectCityLabel = (s: LocationState) => s.cityLabel;
-export const selectRoute = (s: LocationState) => s.route;
-export const selectSchool = (s: LocationState) => s.school;
-export const selectDriver = (s: LocationState) => s.driver;
-export const selectBus = (s: LocationState) => s.bus;
-export const selectStudent = (s: LocationState) => s.student;
-export const selectChild = (s: LocationState) => s.child;
-export const selectParent = (s: LocationState) => s.parent;
-export const selectFleetBuses = (s: LocationState) => s.fleetBuses;
-export const selectRouteCoordinates = (s: LocationState) => s.routeCoordinates;
-export const selectRouteBounds = (s: LocationState) => s.routeBounds;
-export const selectUserLocation = (s: LocationState) => s.userLocation;
+export const selectCityLabel            = (s: LocationState) => s.cityLabel;
+export const selectRoute                = (s: LocationState) => s.route;
+export const selectSchool               = (s: LocationState) => s.school;
+export const selectDriver               = (s: LocationState) => s.driver;
+export const selectBus                  = (s: LocationState) => s.bus;
+export const selectStudent              = (s: LocationState) => s.student;
+export const selectChild                = (s: LocationState) => s.child;
+export const selectParent               = (s: LocationState) => s.parent;
+export const selectFleetBuses           = (s: LocationState) => s.fleetBuses;
+export const selectRouteCoordinates     = (s: LocationState) => s.routeCoordinates;
+export const selectRouteBounds          = (s: LocationState) => s.routeBounds;
+export const selectUserLocation         = (s: LocationState) => s.userLocation;
+/** Road-snapped coordinates — null until useRoadRoute writes them back */
+export const selectSnappedRouteCoordinates = (s: LocationState) => s.snappedRouteCoordinates;
+
+/**
+ * Derives AdminStats from the city's actual fleet — no hardcoded numbers.
+ *
+ * Counts are computed from fleetBuses (real bus pool) so they automatically
+ * reflect whichever city the user is in.  Revenue and complaint counts are
+ * lightly seeded from the city id so they look realistic but vary per city.
+ */
+export const selectAdminStats = (s: LocationState): import("@/types").AdminStats => {
+  const buses = s.fleetBuses;
+
+  const totalBuses      = buses.length;
+  const runningBuses    = buses.filter((b) => b.status === "running").length;
+  const delayedBuses    = buses.filter((b) => b.status === "delayed").length;
+  const offlineBuses    = buses.filter((b) => !b.gpsHealth).length;
+  const studentsOnboard = buses.reduce((sum, b) => sum + b.studentsOnboard, 0);
+
+  // Derive a stable per-city seed for the "noisy" fields so numbers look
+  // realistic and don't change on every render, but differ across cities.
+  const seed = s.cityId
+    .split("")
+    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+
+  const totalStudents   = totalBuses * 40 + (seed % 80);
+  const totalDrivers    = totalBuses;
+  const activeDrivers   = runningBuses + delayedBuses;
+  const gpsHealthPct    = offlineBuses === 0 ? 100 : Math.round(((totalBuses - offlineBuses) / totalBuses) * 100);
+  const routeHealthPct  = delayedBuses === 0 ? 98  : Math.round(((totalBuses - delayedBuses) / totalBuses) * 100);
+  const revenue         = 180_000 + (seed % 80_000);
+  const openComplaints  = (seed % 5) + 1;
+
+  return {
+    totalBuses,
+    runningBuses,
+    delayedBuses,
+    offlineBuses,
+    totalStudents,
+    studentsOnboard,
+    totalDrivers,
+    activeDrivers,
+    revenueThisMonth: revenue,
+    gpsHealthPercent: gpsHealthPct,
+    openComplaints,
+    routeHealthPercent: routeHealthPct,
+  };
+};

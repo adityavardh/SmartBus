@@ -6,5 +6,29 @@
     "password": "avardhan24",
     "role": "student",
     "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=ADI&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "user-admin-internn54@gmail.com",
+    "name": "Leo",
+    "email": "internn54@gmail.com",
+    "password": "Avardhan24",
+    "role": "admin",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "user-student-aditya@gmail.com",
+    "name": "adi",
+    "email": "aditya@gmail.com",
+    "password": "avardhan24",
+    "role": "student",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=adi&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "user-driver-driver@gmail.com",
+    "name": "Driver",
+    "email": "driver@gmail.com",
+    "password": "driver24",
+    "role": "driver",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Driver&backgroundColor=2E8BFF"
   }
 ]

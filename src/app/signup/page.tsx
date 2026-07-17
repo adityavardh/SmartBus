@@ -2,11 +2,20 @@
 
 /**
  * src/app/signup/page.tsx
- * ─────────────────────────────────────────────────────────────
- * Signup page — collects name, email, password, and role,
- * then calls NextAuth signIn("credentials") to create a session.
- * ─────────────────────────────────────────────────────────────
+ *
+ * Fixes applied:
+ *
+ * 1. STALE ERROR CLEARING
+ *    - Role button click  → clears ALL errors (including auth banner)
+ *    - Every <Input>      → clears its own field error + auth banner on
+ *                           first keystroke via clearFieldError()
+ *
+ * 2. Error scope
+ *    - The `auth` banner is only ever set by the server response inside
+ *      onSubmit.  It is never set or influenced by the Google flow
+ *      (Google does not exist on this page).
  */
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -31,21 +40,29 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const ROLES: { role: UserRole; label: string; icon: React.ReactNode; desc: string }[] = [
-  { role: "student", label: "Student", icon: <GraduationCap className="w-5 h-5" />, desc: "Track your bus & earn rewards" },
-  { role: "parent", label: "Parent", icon: <Users className="w-5 h-5" />, desc: "Monitor your child's journey" },
-  { role: "driver", label: "Driver", icon: <Truck className="w-5 h-5" />, desc: "Manage your route & trips" },
-  { role: "admin", label: "Admin", icon: <Shield className="w-5 h-5" />, desc: "Oversee the full fleet" },
+  { role: "student", label: "Student", icon: <GraduationCap className="w-5 h-5" />, desc: "Track your bus & earn rewards"   },
+  { role: "parent",  label: "Parent",  icon: <Users         className="w-5 h-5" />, desc: "Monitor your child's journey"    },
+  { role: "driver",  label: "Driver",  icon: <Truck         className="w-5 h-5" />, desc: "Manage your route & trips"       },
+  { role: "admin",   label: "Admin",   icon: <Shield        className="w-5 h-5" />, desc: "Oversee the full fleet"          },
 ];
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 type FormData = { name: string; email: string; password: string; confirm: string };
+
+type FormErrors = Partial<FormData & { role: string; auth: string }>;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SignupPage() {
   const router = useRouter();
   const { signup } = useAuthStore();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<FormData & { role: string; auth: string }>>({});
+  const [isLoading,    setIsLoading]    = useState(false);
+  const [errors,       setErrors]       = useState<FormErrors>({});
 
   const { register, handleSubmit } = useForm<FormData>({
     defaultValues: { name: "", email: "", password: "", confirm: "" },
@@ -57,16 +74,42 @@ export default function SignupPage() {
     if (saved && ROLES.find((r) => r.role === saved)) setSelectedRole(saved);
   }, []);
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /**
+   * Clear a single field error + always wipe the auth banner too
+   * (fresh typing means the user is correcting a previous mistake).
+   */
+  function clearFieldError(field: keyof FormErrors) {
+    setErrors((prev) => {
+      if (!prev[field] && !prev.auth) return prev;
+      const next = { ...prev };
+      delete next[field];
+      delete next.auth;
+      return next;
+    });
+  }
+
+  /**
+   * Selecting a new role always wipes ALL errors — the user is re-starting.
+   */
+  function handleRoleSelect(role: UserRole) {
+    setSelectedRole(role);
+    setErrors({});
+    localStorage.setItem("lastLoginRole", role);
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+
   const onSubmit = async (data: FormData) => {
-    // Validate
-    const errs: typeof errors = {};
-    if (!data.name.trim()) errs.name = "Full name is required";
-    if (!data.email.trim()) errs.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(data.email)) errs.email = "Enter a valid email";
-    if (!data.password) errs.password = "Password is required";
-    else if (data.password.length < 8) errs.password = "Must be at least 8 characters";
-    if (data.confirm !== data.password) errs.confirm = "Passwords don't match";
-    if (!selectedRole) errs.role = "Please select a role";
+    const errs: FormErrors = {};
+    if (!data.name.trim())                                 errs.name     = "Full name is required";
+    if (!data.email.trim())                                errs.email    = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(data.email))            errs.email    = "Enter a valid email";
+    if (!data.password)                                    errs.password = "Password is required";
+    else if (data.password.length < 8)                     errs.password = "Must be at least 8 characters";
+    if (data.confirm !== data.password)                    errs.confirm  = "Passwords don't match";
+    if (!selectedRole)                                     errs.role     = "Please select a role";
 
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -77,38 +120,38 @@ export default function SignupPage() {
 
     try {
       const result = await signIn("credentials", {
-        email: data.email.trim().toLowerCase(),
+        email:    data.email.trim().toLowerCase(),
         password: data.password,
-        name: data.name.trim(),
-        role: selectedRole!,
+        name:     data.name.trim(),
+        role:     selectedRole!,
         redirect: false,
       });
 
       if (result?.error) {
-        setErrors({ auth: "Could not create your account. Please try again." });
+        const msg = result.error.includes("already exists")
+          ? "An account with this email already exists for this role. Please log in instead."
+          : "Could not create your account. Please try again.";
+        setErrors({ auth: msg });
         setIsLoading(false);
         return;
       }
 
-      // Save user to Zustand client-side store for credentials lookup consistency
+      // Mirror new user into the Zustand client-side store
       signup({
-        id: `user-${data.email.trim().toLowerCase()}`,
-        name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
-        role: selectedRole!,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.name.trim())}&backgroundColor=2E8BFF`,
-        streak: 0,
-        ecoScore: 0,
-        rewardPoints: 0,
-        tripsCompleted: 0,
-        achievements: [],
+        id:              `user-${selectedRole}-${data.email.trim().toLowerCase()}`,
+        name:            data.name.trim(),
+        email:           data.email.trim().toLowerCase(),
+        role:            selectedRole!,
+        avatar:          `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.name.trim())}&backgroundColor=2E8BFF`,
+        streak:          0,
+        ecoScore:        0,
+        rewardPoints:    0,
+        tripsCompleted:  0,
+        achievements:    [],
         emergencyContacts: [],
       });
 
-      // Save role for next visit
       localStorage.setItem("lastLoginRole", selectedRole!);
-
-      // Redirect to role dashboard
       router.push(`/dashboard/${selectedRole}`);
       router.refresh();
     } catch {
@@ -117,29 +160,45 @@ export default function SignupPage() {
     }
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <div className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6">
       <div className="absolute inset-0 mesh-bg" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(46,139,255,0.15),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(255,194,71,0.12),transparent_30%)]" />
 
       <div className="relative z-10 mx-auto max-w-lg">
+
         {/* Back link */}
-        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-8"
+        >
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to login
           </Link>
         </motion.div>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 text-center"
+        >
           <div className="flex justify-center mb-4">
             <div className="w-14 h-14 rounded-[18px] bg-gradient-to-br from-accent via-accent/80 to-accent/50 flex items-center justify-center shadow-[0_0_30px_rgba(255,194,71,0.3)]">
               <MapPin className="w-7 h-7 text-background" strokeWidth={2.5} />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white">Create Account</h1>
-          <p className="text-white/50 mt-2">Join SmartBus — your intelligent school transport platform</p>
+          <p className="text-white/50 mt-2">
+            Join SmartBus — your intelligent school transport platform
+          </p>
         </motion.div>
 
         {/* Card */}
@@ -149,6 +208,7 @@ export default function SignupPage() {
           transition={{ delay: 0.1 }}
           className="rounded-[28px] border border-white/10 bg-card/80 backdrop-blur-2xl p-7 shadow-float"
         >
+
           {/* Role selector */}
           <div className="mb-6">
             <p className="text-sm font-medium text-white/60 mb-3">I am a…</p>
@@ -157,17 +217,16 @@ export default function SignupPage() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => {
-                    setSelectedRole(role);
-                    localStorage.setItem("lastLoginRole", role);
-                  }}
+                  onClick={() => handleRoleSelect(role)}
                   className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all ${
                     selectedRole === role
                       ? "border-primary/30 bg-primary/15 text-white shadow-[0_0_0_1px_rgba(46,139,255,0.2)]"
                       : "border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <span className={selectedRole === role ? "text-primary" : "text-white/40"}>{icon}</span>
+                  <span className={selectedRole === role ? "text-primary" : "text-white/40"}>
+                    {icon}
+                  </span>
                   <div>
                     <p className="text-sm font-semibold">{label}</p>
                     <p className="text-[10px] text-white/40 mt-0.5 leading-tight">{desc}</p>
@@ -175,15 +234,23 @@ export default function SignupPage() {
                 </button>
               ))}
             </div>
-            {errors.role && <p className="text-xs text-danger mt-2">{errors.role}</p>}
+            {errors.role && (
+              <p className="text-xs text-danger mt-2">{errors.role}</p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Auth-level error */}
+
+            {/* Auth-level error banner */}
             {errors.auth && (
-              <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+              <motion.div
+                key="auth-error"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
+              >
                 {errors.auth}
-              </div>
+              </motion.div>
             )}
 
             {/* Full name */}
@@ -195,10 +262,14 @@ export default function SignupPage() {
                   id="signup-name"
                   className={`pl-10 ${errors.name ? "border-danger/60" : ""}`}
                   placeholder="e.g. Adi Kumar"
-                  {...register("name")}
+                  {...register("name", {
+                    onChange: () => clearFieldError("name"),
+                  })}
                 />
               </div>
-              {errors.name && <p className="text-xs text-danger">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-xs text-danger">{errors.name}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -211,10 +282,14 @@ export default function SignupPage() {
                   type="email"
                   className={`pl-10 ${errors.email ? "border-danger/60" : ""}`}
                   placeholder="you@example.com"
-                  {...register("email")}
+                  {...register("email", {
+                    onChange: () => clearFieldError("email"),
+                  })}
                 />
               </div>
-              {errors.email && <p className="text-xs text-danger">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-xs text-danger">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -227,10 +302,14 @@ export default function SignupPage() {
                   type="password"
                   className={`pl-10 ${errors.password ? "border-danger/60" : ""}`}
                   placeholder="At least 8 characters"
-                  {...register("password")}
+                  {...register("password", {
+                    onChange: () => clearFieldError("password"),
+                  })}
                 />
               </div>
-              {errors.password && <p className="text-xs text-danger">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-xs text-danger">{errors.password}</p>
+              )}
             </div>
 
             {/* Confirm password */}
@@ -243,10 +322,14 @@ export default function SignupPage() {
                   type="password"
                   className={`pl-10 ${errors.confirm ? "border-danger/60" : ""}`}
                   placeholder="Repeat your password"
-                  {...register("confirm")}
+                  {...register("confirm", {
+                    onChange: () => clearFieldError("confirm"),
+                  })}
                 />
               </div>
-              {errors.confirm && <p className="text-xs text-danger">{errors.confirm}</p>}
+              {errors.confirm && (
+                <p className="text-xs text-danger">{errors.confirm}</p>
+              )}
             </div>
 
             <Button
