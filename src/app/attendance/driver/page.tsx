@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
@@ -34,7 +34,20 @@ function seedStudents(): StudentRow[] {
   }));
 }
 
+// ─── Default export — thin shell required by Next.js App Router ──────────────
+// useSearchParams() must live inside a component wrapped with <Suspense>.
+
 export default function DriverAttendancePage() {
+  return (
+    <Suspense fallback={null}>
+      <DriverAttendanceContent />
+    </Suspense>
+  );
+}
+
+// ─── All logic lives here (useSearchParams is safe inside Suspense) ───────────
+
+function DriverAttendanceContent() {
   const searchParams = useSearchParams();
 
   // ── Attendance state (mutable local copy of the mock roster) ──────────────
