@@ -41,7 +41,7 @@ const ROLE_NAV: Record<UserRole, { href: string; label: string; icon: React.Elem
   ],
   parent: [
     { href: "/dashboard/parent", label: "Home", icon: LayoutDashboard },
-    { href: "/dashboard/parent", label: "My Child", icon: Baby },
+    { href: "/parent/child", label: "My Child", icon: Baby },
     { href: "/map/student", label: "Track Bus", icon: Map },
     { href: "/notifications", label: "Notifications", icon: Bell },
     { href: "/profile", label: "Profile", icon: User },
@@ -51,7 +51,7 @@ const ROLE_NAV: Record<UserRole, { href: string; label: string; icon: React.Elem
   driver: [
     { href: "/dashboard/driver", label: "Dashboard", icon: LayoutDashboard },
     { href: "/route/driver", label: "Today's Route", icon: MapPin },
-    { href: "/attendance/driver", label: "Students", icon: Users },
+    { href: "/students/driver", label: "Students", icon: Users },
     { href: "/attendance/driver", label: "Attendance", icon: ClipboardList },
     { href: "/notifications", label: "Notifications", icon: Bell },
     { href: "/profile", label: "Profile", icon: User },

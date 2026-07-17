@@ -199,24 +199,19 @@ export function LoginForm() {
   // ── Google OAuth ──────────────────────────────────────────────────────────
 
   const handleGoogleSignIn = async () => {
-    // Always clear ALL errors before starting OAuth — this is the key fix
-    // that prevents a stale credentials error showing during/after Google flow.
     setFormErrors({});
-
     const role: UserRole = selectedRole ?? "student";
 
     if (typeof window !== "undefined") {
       localStorage.setItem("lastLoginRole", role);
+      // Short-lived cookie so the server signIn callback can read the role
+      document.cookie = `smartbus_oauth_role=${role}; path=/; max-age=300; SameSite=Lax`;
     }
 
     setGoogleLoading(true);
     try {
-      // Encode role as ?smartbusRole= on the callbackUrl.
-      // auth.ts reads this from account.callbackUrl in the signIn callback.
-      // This is the only reliable cross-browser mechanism — never localStorage.
-      const callbackUrl = `${window.location.origin}/dashboard/${role}?smartbusRole=${role}`;
+      const callbackUrl = `${window.location.origin}/dashboard/${role}`;
       await signIn("google", { callbackUrl });
-      // signIn("google") triggers a full-page redirect, so nothing runs after this.
     } catch {
       setFormErrors({ google: "Google sign-in failed. Please try again." });
       setGoogleLoading(false);

@@ -20,8 +20,9 @@ import {
   ClipboardList,
   Users,
   MapPin,
-  Clock
+  Clock,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function DriverDashboard() {
   const { user } = useAuthStore();
@@ -160,10 +161,16 @@ export default function DriverDashboard() {
             </Card>
 
             <div className="grid grid-cols-2 gap-4">
-              <QuickAction icon={<QrCode className="w-6 h-6" />} label="Scanner" />
-              <QuickAction icon={<Navigation className="w-6 h-6" />} label="Navigate" />
-              <QuickAction icon={<Users className="w-6 h-6" />} label="Manifest" />
-              <QuickAction icon={<ClipboardList className="w-6 h-6" />} label="Report" />
+              <Link href="/attendance/driver?scanner=1" className="contents">
+                <QuickAction icon={<QrCode className="w-6 h-6" />} label="Scanner" />
+              </Link>
+              <Link href="/route/driver" className="contents">
+                <QuickAction icon={<Navigation className="w-6 h-6" />} label="Navigate" />
+              </Link>
+              <Link href="/students/driver" className="contents">
+                <QuickAction icon={<Users className="w-6 h-6" />} label="Manifest" />
+              </Link>
+              <QuickAction icon={<ClipboardList className="w-6 h-6" />} label="Report" onClick={() => showToast("📋 Incident report submitted to dispatch", "bg-white/10 border-white/20 text-white")} />
             </div>
           </div>
         </div>
@@ -208,9 +215,9 @@ function ActionButton({ icon, label, color, onClick, disabled }: {
   );
 }
 
-function QuickAction({ icon, label }: { icon: React.ReactNode; label: string }) {
+function QuickAction({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
-    <Button variant="glass" className="h-24 flex-col gap-3 rounded-2xl bg-white/5 hover:bg-white/10">
+    <Button variant="glass" className="h-24 flex-col gap-3 rounded-2xl bg-white/5 hover:bg-white/10" onClick={onClick}>
       <div className="text-accent">{icon}</div>
       <span className="text-xs font-medium text-white">{label}</span>
     </Button>

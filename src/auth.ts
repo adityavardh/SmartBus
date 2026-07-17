@@ -9,17 +9,11 @@
  *
  * ── Issues fixed ──────────────────────────────────────────────
  *
- *  1. GOOGLE ROLE INJECTION (was broken)
- *     Old approach: stored role in localStorage, appended it to
- *     callbackUrl as ?oauthRole=, tried to read account.oauthRole.
- *     The OAuth provider never touches custom callbackUrl params —
- *     account.oauthRole was always undefined → role always "student".
- *
- *     New approach: role is encoded into the OAuth `state` parameter
- *     via a custom authorization.params.state value before the Google
- *     redirect, and read back from params.state in the signIn callback
- *     via the `request` object on the callback URL.
- *     The state is signed by Auth.js so it cannot be tampered with.
+ *  1. GOOGLE ROLE INJECTION (fixed)
+ *     The login form sets a short-lived `smartbus_oauth_role` cookie before
+ *     triggering the Google OAuth redirect.  The signIn callback reads this
+ *     cookie via next/headers cookies() to determine the intended role.
+ *     Default falls back to "student" if the cookie is missing or invalid.
  *
  *  2. PASSWORD HASHING
  *     Passwords are now hashed with bcrypt (cost 12) on signup and
@@ -174,15 +168,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // ── 2. Google OAuth ───────────────────────────────────────────────────────
     //
     // Role passing:
-    //   The frontend calls signIn("google", { callbackUrl: "/dashboard/admin" }).
-    //   Before that, it writes the role into a `state` query param by calling
-    //   signIn with a custom `params` object injected via `authorizationParams`.
-    //   Auth.js v5 passes our custom params through to Google and echoes the
-    //   state back on the callback URL.  We read it in `signIn` callback below
-    //   from `request.url` (the full callback URL including ?state=...).
-    //
-    //   This is the only reliable cross-browser, cross-device, localStorage-free
-    //   mechanism for passing state through an OAuth round-trip.
+    //   Before the Google OAuth redirect, the login form sets a short-lived
+    //   `smartbus_oauth_role` cookie (max-age 300s, SameSite=Lax).
+    //   The signIn callback below reads that cookie via next/headers cookies()
+    //   to determine the intended role.  Defaults to "student" if absent.
     Google({
       clientId:     process.env.GOOGLE_CLIENT_ID     ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
@@ -194,10 +183,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      * signIn — fires for Google after the provider authenticates the user.
      *
      * Role extraction:
-     *   Auth.js v5 exposes the full callback URL on the request object.
-     *   The frontend encodes the role as `?smartbusRole=admin` on the
-     *   callbackUrl.  We read it here.
-     *   Fallback: if the param is missing/invalid, default to "student".
+     *   Before the Google redirect, the login form sets a short-lived
+     *   `smartbus_oauth_role` cookie (max-age 300s, SameSite=Lax).
+     *   This callback reads that cookie via next/headers and validates
+     *   it against isValidRole. Defaults to "student" if absent or invalid.
      */
     async signIn({ user, account, profile }) {
       if (account?.provider !== "google") return true;
@@ -210,23 +199,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return false;
       }
 
-      // ── Read role from the callbackUrl param we encoded on the frontend ──
-      // The frontend calls:
-      //   signIn("google", { callbackUrl: `/dashboard/${role}?smartbusRole=${role}` })
-      // Auth.js passes callbackUrl through the OAuth state and puts it back on
-      // account.callbackUrl after the callback.
-      const callbackUrl: string =
-        (account as unknown as { callbackUrl?: string }).callbackUrl ?? "";
-
+      // ── Read the role from the cookie set by the login form before OAuth redirect ──
       let role: UserRole = "student";
       try {
-        const parsed = new URL(
-          callbackUrl.startsWith("http") ? callbackUrl : `http://x${callbackUrl}`
-        );
-        const raw = parsed.searchParams.get("smartbusRole") ?? "";
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("smartbus_oauth_role")?.value ?? "";
         if (isValidRole(raw)) role = raw;
       } catch {
-        // malformed URL — keep default
+        // next/headers not available in this context — keep default
       }
 
       const { isNew } = upsertOAuthUser({

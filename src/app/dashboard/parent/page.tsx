@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,18 @@ import { LiveMap } from "@/components/map/live-map";
 export default function ParentDashboard() {
   const child = useLocationStore(selectChild);
   const driver = useLocationStore(selectDriver);
+  const [calling, setCalling] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const handleCallDriver = () => {
+    if (calling) return;
+    setCalling(true);
+    setToast(`📞 Dialing ${driver.name}…`);
+    setTimeout(() => {
+      setCalling(false);
+      setToast(null);
+    }, 4000);
+  };
 
   return (
     <AppLayout>
@@ -87,8 +100,19 @@ export default function ParentDashboard() {
                     <p className="text-xs text-white/50">{child.busNumber} • {driver.rating}★</p>
                     <p className="text-xs text-white/40">{driver.experience} experience</p>
                   </div>
-                  <Button variant="glass" size="icon" className="rounded-full shrink-0">
-                    <Phone className="w-4 h-4 text-white" />
+                  <Button
+                    variant="glass"
+                    size="icon"
+                    className={`rounded-full shrink-0 transition-colors ${
+                      calling
+                        ? "bg-success/20 border-success/40 text-success"
+                        : "hover:bg-success/20 hover:text-success hover:border-success/40"
+                    }`}
+                    onClick={handleCallDriver}
+                    disabled={calling}
+                    title={`Call ${driver.name}`}
+                  >
+                    <Phone className={`w-4 h-4 ${calling ? "animate-pulse" : ""}`} />
                   </Button>
                 </div>
               </CardContent>
@@ -126,6 +150,20 @@ export default function ParentDashboard() {
         </div>
       </div>
       <MobileNav />
+
+      {/* Call toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl border border-success/30 bg-success/20 backdrop-blur-xl shadow-float text-sm font-semibold text-success whitespace-nowrap"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 }

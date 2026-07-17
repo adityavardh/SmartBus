@@ -24,7 +24,7 @@ interface AuthState {
   role: UserRole;
   user: UserProfile;
   registeredUsers: UserProfile[];
-  login: (role: UserRole, email?: string, name?: string) => void;
+  login: (role: UserRole, email?: string, name?: string, image?: string) => void;
   signup: (user: UserProfile) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
       role: "student",
       user: CURRENT_USER,
       registeredUsers: [],
-      login: (role, email, name) => {
+      login: (role, email, name, image) => {
         const { registeredUsers } = get();
         let selectedUser = CURRENT_USER;
         if (email) {
@@ -68,6 +68,10 @@ export const useAuthStore = create<AuthState>()(
           if (role === "driver")  selectedUser = DRIVER_USER;
           if (role === "admin")   selectedUser = ADMIN_USER;
           if (role === "student") selectedUser = CURRENT_USER;
+        }
+        // Always override avatar with the real session image if provided
+        if (image) {
+          selectedUser = { ...selectedUser, avatar: image };
         }
         set({ isAuthenticated: true, role, user: selectedUser, isLoading: false });
       },

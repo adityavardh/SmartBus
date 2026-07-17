@@ -1,19 +1,19 @@
 [
   {
     "id": "user-student-adityamarisa167@gmail.com",
-    "name": "ADI",
+    "name": "Aditya",
     "email": "adityamarisa167@gmail.com",
     "password": "avardhan24",
     "role": "student",
-    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=ADI&backgroundColor=2E8BFF"
+    "image": ""
   },
   {
     "id": "user-admin-internn54@gmail.com",
-    "name": "Leo",
+    "name": "internn54",
     "email": "internn54@gmail.com",
     "password": "Avardhan24",
     "role": "admin",
-    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo&backgroundColor=2E8BFF"
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocJA9pUfxgRKKv8qsCJTtRdg2_BeEoz4jtoCww_J8oHtMoQPXw=s96-c"
   },
   {
     "id": "user-student-aditya@gmail.com",
@@ -30,5 +30,85 @@
     "password": "driver24",
     "role": "driver",
     "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Driver&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "oauth-student-internn54@gmail.com",
+    "name": "internn54",
+    "email": "internn54@gmail.com",
+    "role": "student",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocJA9pUfxgRKKv8qsCJTtRdg2_BeEoz4jtoCww_J8oHtMoQPXw=s96-c",
+    "password": ""
+  },
+  {
+    "id": "user-parent-internn54@gmail.com",
+    "name": "adi",
+    "email": "internn54@gmail.com",
+    "password": "$2b$12$N7WQJsxeIqhpJCfbL4pO2uOJlm2B1O3u7h.dJY8CtrlrA5vSRqPIy",
+    "role": "parent",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=adi&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "user-driver-driver1@gmail.com",
+    "name": "Driver",
+    "email": "driver1@gmail.com",
+    "password": "$2b$12$KDmcvYszXZP4Fx47Oj.fZuCkqhpKcsteqRzgvabkElXmBnGNq6.fu",
+    "role": "driver",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Driver&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "user-admin-admin@gmail.com",
+    "name": "admin",
+    "email": "admin@gmail.com",
+    "password": "$2b$12$Ex3.IQbwiQZdvqyoEDLTI.K3IQjBpBB/fYOAJw6wzrTT3f3d0.wwy",
+    "role": "admin",
+    "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=admin&backgroundColor=2E8BFF"
+  },
+  {
+    "id": "oauth-student-final.final4last@gmail.com",
+    "name": "Final",
+    "email": "final.final4last@gmail.com",
+    "role": "student",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocIgJbzFWVGqO0xdtOU4jN1vgTDa808FJSEuroi4wwvJGQBcHw=s96-c",
+    "password": ""
+  },
+  {
+    "id": "oauth-parent-leo.oel5544@gmail.com",
+    "name": "Leo",
+    "email": "leo.oel5544@gmail.com",
+    "role": "parent",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocLIFJ4vIrVHcvaLYA7fZzq-guOPmLSrkB4Ib-iyoGj1vg_nag=s96-c",
+    "password": ""
+  },
+  {
+    "id": "oauth-driver-a73977903@gmail.com",
+    "name": "Anny",
+    "email": "a73977903@gmail.com",
+    "role": "driver",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocKpToN5qo6tX7OjheyCE555T5RC6ym8QlkNj2lJCJay4qOV9A=s96-c",
+    "password": ""
+  },
+  {
+    "id": "oauth-admin-leo.oel5544@gmail.com",
+    "name": "Leo",
+    "email": "leo.oel5544@gmail.com",
+    "role": "admin",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocLIFJ4vIrVHcvaLYA7fZzq-guOPmLSrkB4Ib-iyoGj1vg_nag=s96-c",
+    "password": ""
+  },
+  {
+    "id": "oauth-driver-final.final4last@gmail.com",
+    "name": "Final",
+    "email": "final.final4last@gmail.com",
+    "role": "driver",
+    "image": "https://lh3.googleusercontent.com/a/ACg8ocIgJbzFWVGqO0xdtOU4jN1vgTDa808FJSEuroi4wwvJGQBcHw=s96-c",
+    "password": ""
+  },
+  {
+    "id": "oauth-parent-adityamarisa167@gmail.com",
+    "name": "Aditya",
+    "email": "adityamarisa167@gmail.com",
+    "role": "parent",
+    "image": "",
+    "password": ""
   }
 ]

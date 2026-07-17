@@ -6,12 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuthStore } from "@/store";
-import { LEADERBOARD, CURRENT_BUS } from "@/data/mock";
+import { useLocationStore, selectBus } from "@/store/locationStore";
+import { LEADERBOARD } from "@/data/mock";
 import Link from "next/link";
 import { Trophy, Flame, Leaf, MapPin, Phone, Award } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
+  const bus = useLocationStore(selectBus);
 
   return (
     <AppLayout>
@@ -142,8 +144,8 @@ export default function ProfilePage() {
                   🚌
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-white">{CURRENT_BUS.number}</p>
-                  <p className="text-sm text-white/40">{CURRENT_BUS.registration}</p>
+                  <p className="font-semibold text-white">{bus.number}</p>
+                  <p className="text-sm text-white/40">{bus.registration}</p>
                 </div>
                 <MapPin className="w-5 h-5 text-primary" />
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,32 @@ export default function EmergencyPage() {
   const [sosActive, setSosActive] = useState(false);
   const addNotification = useNotificationStore((s) => s.addNotification);
   const voiceEnabled = useSettingsStore((s) => s.settings.voiceAnnouncements);
+
+  const [shareToast, setShareToast] = useState<{ message: string; ok: boolean } | null>(null);
+
+  const handleShareLocation = async () => {
+    const shareText =
+      "🚌 SmartBus Live Location — Track my bus in real time:\n" +
+      `${window.location.origin}/map/student\n\nShared via SmartBus Safety`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "SmartBus Live Location",
+          text: shareText,
+          url: `${window.location.origin}/map/student`,
+        });
+        setShareToast({ message: "📍 Location shared successfully", ok: true });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        setShareToast({ message: "📋 Location link copied to clipboard", ok: true });
+      }
+    } catch {
+      // User cancelled share dialog — not an error, just dismiss silently
+      return;
+    }
+    setTimeout(() => setShareToast(null), 3000);
+  };
 
   const triggerSOS = (type: string) => {
     setSosActive(true);
@@ -98,7 +124,7 @@ export default function EmergencyPage() {
           </Button>
         </div>
 
-        <Button variant="glass" className="w-full">
+        <Button variant="glass" className="w-full" onClick={handleShareLocation}>
           <Share2 className="w-4 h-4" />
           Share Live GPS Location
         </Button>
@@ -129,6 +155,24 @@ export default function EmergencyPage() {
         </Card>
       </div>
       <MobileNav />
+
+      {/* Share / copy toast */}
+      <AnimatePresence>
+        {shareToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl border backdrop-blur-xl shadow-float text-sm font-semibold whitespace-nowrap ${
+              shareToast.ok
+                ? "bg-success/20 border-success/30 text-success"
+                : "bg-danger/20 border-danger/30 text-danger"
+            }`}
+          >
+            {shareToast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 }

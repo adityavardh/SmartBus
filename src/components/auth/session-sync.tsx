@@ -44,14 +44,16 @@ export function SessionSync() {
       const nextRole  = (session.user as { role?: UserRole }).role ?? "student";
       const nextEmail = session.user.email ?? "";
       const nextName  = session.user.name  ?? "";
+      const nextImage = session.user.image ?? "";
 
       // Only sync if something actually changed — avoids unnecessary store writes
       if (
         !isAuthenticated ||
-        user.email !== nextEmail ||
-        role      !== nextRole
+        user.email  !== nextEmail ||
+        role        !== nextRole  ||
+        user.avatar !== nextImage
       ) {
-        login(nextRole, nextEmail, nextName);
+        login(nextRole, nextEmail, nextName, nextImage);
       }
       return;
     }

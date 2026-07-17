@@ -9,25 +9,25 @@ export const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/profile",
     "/emergency",
     "/settings",
-    "/bus/student"
   ],
   parent: [
     "/dashboard/parent",
+    "/parent/child",
     "/map/student", // parent uses same map component but filtered
     "/notifications",
     "/profile",
     "/emergency",
     "/settings",
-    "/bus/student"
   ],
   driver: [
     "/dashboard/driver",
     "/route/driver",
     "/attendance/driver",
+    "/students/driver",
     "/notifications",
     "/profile",
     "/emergency",
-    "/settings"
+    "/settings",
   ],
   admin: [
     "/dashboard/admin",
@@ -37,7 +37,7 @@ export const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/notifications",
     "/profile",
     "/emergency",
-    "/settings"
+    "/settings",
   ],
 };
 

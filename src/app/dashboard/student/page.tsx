@@ -1,10 +1,10 @@
 "use client";
 
-
+import { motion } from "framer-motion";
 import { AppLayout, MobileNav } from "@/components/layout/sidebar";
 import { DashboardHero, ETACountdown, TripTimeline } from "@/components/dashboard/dashboard-cards";
+import { LiveMap } from "@/components/map/live-map";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { WEATHER } from "@/data/mock";
 
 export default function StudentDashboard() {
@@ -12,7 +12,15 @@ export default function StudentDashboard() {
     <AppLayout>
       <div className="p-4 lg:p-8 pb-24 lg:pb-8 space-y-6">
         <DashboardHero />
-        
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <LiveMap />
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <TripTimeline />

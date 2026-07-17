@@ -1,0 +1,239 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration tests": {
+      "status": "unexpected_pass",
+      "failingExample": "All 15 tests PASSED unexpectedly on the current code. This means all 7 regressions (R1–R7) described in the spec have already been fixed in the codebase before this task was executed. The exploration tests found no counterexamples. Specifically: (1) LiveMap IS present in student dashboard; (2) Driver sidebar has no duplicate hrefs — Students=/students/driver, Attendance=/attendance/driver; (3) Parent \"My Child\" href IS /parent/child and the page file exists; (4) Admin dashboard has 7 StatCard elements with Revenue, Complaints, Route Health; (5) Attendance page title IS \"Attendance\" with Scanner Mode present; (6) Driver Students href IS /students/driver; (7) ROLE_ROUTES.driver includes /emergency, no /bus/student anywhere, ROLE_ROUTES.parent includes /parent/child.",
+      "lastRunTimestamp": 1784291784266
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration tests": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291533885
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291543937
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291816141
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291533950
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291825936
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291927985
+      }
+    ],
+    "3.1 Add `LiveMap` to Student dashboard": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534031
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291936756
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292032738
+      }
+    ],
+    "3.2 Fix Driver sidebar — split \"Students\" and \"Attendance\" hrefs": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534083
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292041491
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292074792
+      }
+    ],
+    "3.3 Fix Parent \"My Child\" nav href": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534136
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292085263
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292118899
+      }
+    ],
+    "3.4 Add Revenue, Open Complaints, Route Health KPI cards to Admin dashboard": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534188
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292129358
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292184305
+      }
+    ],
+    "3.5 Separate Driver attendance page from student manifest": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534254
+      },
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292194779
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292827004
+      }
+    ],
+    "3.6 Create `/parent/child` page file": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534314
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292831579
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292843924
+      }
+    ],
+    "3.7 Clean up ROLE_ROUTES in `src/lib/auth.ts`": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534371
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292849799
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292860891
+      }
+    ],
+    "3.8 Verify bug condition exploration tests now pass": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534435
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292866920
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292902150
+      }
+    ],
+    "3.9 Verify preservation tests still pass": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534502
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292908246
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292940020
+      }
+    ],
+    "4. Build verification — ensure 0 type errors": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534580
+      },
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292945623
+      },
+      {
+        "executionId": "f0b3d1db-537b-4a91-9860-335aa57e3aa4",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784293193984
+      }
+    ],
+    "5. Checkpoint — Ensure all tests pass": [
+      {
+        "executionId": "99db619d-47b6-4663-a655-10c11370a883",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784291534684
+      },
+      {
+        "executionId": "f0b3d1db-537b-4a91-9860-335aa57e3aa4",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784293198864
+      },
+      {
+        "executionId": "f0b3d1db-537b-4a91-9860-335aa57e3aa4",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784293286372
+      }
+    ],
+    "3. Fix for SmartBus role-based UI regressions (7 regressions)": [
+      {
+        "executionId": "ccf96927-31c7-49df-95ce-c85d25ff1e6b",
+        "chatSessionId": "sess_c15c5448-a5f7-480f-ba7c-757f71e5b44f",
+        "timestamp": 1784292940052
+      }
+    ]
+  }
+}

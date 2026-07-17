@@ -39,7 +39,7 @@ import type {
 } from "@/types/location";
 import type { Coordinate, MapBounds } from "@/types/map";
 import type { Feature, LineString } from "geojson";
-import type { FleetBus } from "@/types";
+import type { FleetBus, AdminStats } from "@/types";
 
 // ─── State shape ──────────────────────────────────────────────────────────────
 
@@ -82,11 +82,61 @@ interface LocationState {
   // Fleet (admin)
   fleetBuses: FleetBus[];
 
+  // Pre-computed admin stats — stored as state so selectors return a stable
+  // reference and avoid the useSyncExternalStore infinite-loop in React 19.
+  adminStats: AdminStats;
+
   // Actions
   initLocation: () => Promise<void>;
   setUserLocation: (loc: UserLocation) => void;
   /** Called by useRoadRoute once OSRM returns a road-snapped geometry. */
   setSnappedRouteCoordinates: (coords: Coordinate[]) => void;
+}
+
+// ─── Admin stats computation ──────────────────────────────────────────────────
+//
+// Kept as a plain function (not a selector) so it can be called both inside
+// buildStateForCity (initial state) and whenever fleetBuses changes.
+// The result is stored directly in the Zustand state so that the
+// `selectAdminStats` selector just returns `s.adminStats` — a stable object
+// reference — avoiding the React 19 useSyncExternalStore infinite-loop that
+// occurs when a selector returns a freshly-computed object on every call.
+
+function computeAdminStats(fleetBuses: FleetBus[], cityId: string): AdminStats {
+  const buses = fleetBuses;
+
+  const totalBuses      = buses.length;
+  const runningBuses    = buses.filter((b) => b.status === "running").length;
+  const delayedBuses    = buses.filter((b) => b.status === "delayed").length;
+  const offlineBuses    = buses.filter((b) => !b.gpsHealth).length;
+  const studentsOnboard = buses.reduce((sum, b) => sum + b.studentsOnboard, 0);
+
+  const seed = cityId
+    .split("")
+    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+
+  const totalStudents  = totalBuses * 40 + (seed % 80);
+  const totalDrivers   = totalBuses;
+  const activeDrivers  = runningBuses + delayedBuses;
+  const gpsHealthPct   = offlineBuses === 0 ? 100 : Math.round(((totalBuses - offlineBuses) / totalBuses) * 100);
+  const routeHealthPct = delayedBuses === 0 ? 98  : Math.round(((totalBuses - delayedBuses) / totalBuses) * 100);
+  const revenue        = 180_000 + (seed % 80_000);
+  const openComplaints = (seed % 5) + 1;
+
+  return {
+    totalBuses,
+    runningBuses,
+    delayedBuses,
+    offlineBuses,
+    totalStudents,
+    studentsOnboard,
+    totalDrivers,
+    activeDrivers,
+    revenueThisMonth: revenue,
+    gpsHealthPercent: gpsHealthPct,
+    openComplaints,
+    routeHealthPercent: routeHealthPct,
+  };
 }
 
 // ─── Derived helpers ──────────────────────────────────────────────────────────
@@ -143,6 +193,7 @@ function buildStateForCity(cityId: string, _userLocation: UserLocation) {
     routeBounds,
     routeGeoJSON,
     fleetBuses,
+    adminStats: computeAdminStats(fleetBuses, city.id),
   };
 }
 
@@ -235,47 +286,13 @@ export const selectUserLocation         = (s: LocationState) => s.userLocation;
 export const selectSnappedRouteCoordinates = (s: LocationState) => s.snappedRouteCoordinates;
 
 /**
- * Derives AdminStats from the city's actual fleet — no hardcoded numbers.
+ * Returns pre-computed AdminStats from the store state.
  *
- * Counts are computed from fleetBuses (real bus pool) so they automatically
- * reflect whichever city the user is in.  Revenue and complaint counts are
- * lightly seeded from the city id so they look realistic but vary per city.
+ * Stats are computed once inside buildStateForCity (and again on each
+ * initLocation call) and stored as a plain object in state, so this
+ * selector always returns the SAME reference between renders — avoiding
+ * the React 19 useSyncExternalStore "getServerSnapshot must be cached"
+ * infinite-loop that occurred when the selector computed a fresh object
+ * on every call.
  */
-export const selectAdminStats = (s: LocationState): import("@/types").AdminStats => {
-  const buses = s.fleetBuses;
-
-  const totalBuses      = buses.length;
-  const runningBuses    = buses.filter((b) => b.status === "running").length;
-  const delayedBuses    = buses.filter((b) => b.status === "delayed").length;
-  const offlineBuses    = buses.filter((b) => !b.gpsHealth).length;
-  const studentsOnboard = buses.reduce((sum, b) => sum + b.studentsOnboard, 0);
-
-  // Derive a stable per-city seed for the "noisy" fields so numbers look
-  // realistic and don't change on every render, but differ across cities.
-  const seed = s.cityId
-    .split("")
-    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-
-  const totalStudents   = totalBuses * 40 + (seed % 80);
-  const totalDrivers    = totalBuses;
-  const activeDrivers   = runningBuses + delayedBuses;
-  const gpsHealthPct    = offlineBuses === 0 ? 100 : Math.round(((totalBuses - offlineBuses) / totalBuses) * 100);
-  const routeHealthPct  = delayedBuses === 0 ? 98  : Math.round(((totalBuses - delayedBuses) / totalBuses) * 100);
-  const revenue         = 180_000 + (seed % 80_000);
-  const openComplaints  = (seed % 5) + 1;
-
-  return {
-    totalBuses,
-    runningBuses,
-    delayedBuses,
-    offlineBuses,
-    totalStudents,
-    studentsOnboard,
-    totalDrivers,
-    activeDrivers,
-    revenueThisMonth: revenue,
-    gpsHealthPercent: gpsHealthPct,
-    openComplaints,
-    routeHealthPercent: routeHealthPct,
-  };
-};
+export const selectAdminStats = (s: LocationState) => s.adminStats;
