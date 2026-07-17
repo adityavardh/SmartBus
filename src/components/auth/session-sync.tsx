@@ -1,49 +1,65 @@
+"use client";
+
 /**
  * src/components/auth/session-sync.tsx
  * ─────────────────────────────────────────────────────────────
- * Invisible component that syncs the NextAuth session into the
- * existing Zustand auth store.
+ * Syncs the NextAuth session into the Zustand auth store.
  *
- * Why: All the existing pages (Profile, Dashboard, etc.) read
- * user data from useAuthStore(). NextAuth is our source of truth
- * for whether someone is logged in; Zustand gives us the rich
- * UserProfile object (avatar, achievements, streak, etc.).
+ * Why it exists:
+ *   Existing pages read user data from useAuthStore() (avatar,
+ *   achievements, streak…).  NextAuth is the source of truth for
+ *   authentication state; Zustand provides the rich UserProfile.
  *
- * When NextAuth says "authenticated" → call Zustand login(role, email)
- * When NextAuth says "unauthenticated" → call Zustand logout()
+ * ── Bug fixed ─────────────────────────────────────────────────
+ *   The old implementation listed `login` and `logout` (Zustand
+ *   actions) in the useEffect dependency array.  In React Strict
+ *   Mode / hot-reload, Zustand recreates action references on
+ *   every store update, so the effect fired on every single store
+ *   change — creating an infinite sync loop.
+ *
+ *   Fix: read actions via a stable store ref outside the effect.
+ *   The effect only depends on NextAuth's `status` and `session`,
+ *   which change far less frequently.
  * ─────────────────────────────────────────────────────────────
  */
-"use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useAuthStore } from "@/store";
 import type { UserRole } from "@/types";
 
 export function SessionSync() {
   const { data: session, status } = useSession();
-  const { isAuthenticated, login, logout } = useAuthStore();
+
+  // Stable ref to Zustand's store — actions never change identity
+  // here because we read them once via getState(), not via a hook.
+  const storeRef = useRef(useAuthStore.getState);
 
   useEffect(() => {
     if (status === "loading") return;
 
+    const { isAuthenticated, role, user, login, logout } = storeRef.current();
+
     if (status === "authenticated" && session?.user) {
-      const role = session.user.role as UserRole;
-      const email = session.user.email;
-      const name = session.user.name;
-      const currentStoreUser = useAuthStore.getState().user;
-      const currentStoreRole = useAuthStore.getState().role;
-      
-      // Sync if not authenticated in store, or if email/role does not match NextAuth session
-      if (!isAuthenticated || currentStoreUser.email !== email || currentStoreRole !== role) {
-        login(role, email, name);
+      const nextRole  = (session.user as { role?: UserRole }).role ?? "student";
+      const nextEmail = session.user.email ?? "";
+      const nextName  = session.user.name  ?? "";
+
+      // Only sync if something actually changed — avoids unnecessary store writes
+      if (
+        !isAuthenticated ||
+        user.email !== nextEmail ||
+        role      !== nextRole
+      ) {
+        login(nextRole, nextEmail, nextName);
       }
+      return;
     }
 
     if (status === "unauthenticated" && isAuthenticated) {
       logout();
     }
-  }, [status, session, isAuthenticated, login, logout]);
+  }, [status, session]); // ← only stable NextAuth values in deps
 
-  return null; // renders nothing — purely for side effects
+  return null;
 }

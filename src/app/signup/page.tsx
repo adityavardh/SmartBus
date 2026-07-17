@@ -128,9 +128,14 @@ export default function SignupPage() {
       });
 
       if (result?.error) {
-        const msg = result.error.includes("already exists")
-          ? "An account with this email already exists for this role. Please log in instead."
-          : "Could not create your account. Please try again.";
+        const CODE_MESSAGES: Record<string, string> = {
+          account_exists: "An account with this email already exists for this role. Please log in.",
+          invalid_input:  "Please fill in all required fields correctly.",
+        };
+        const msg =
+          CODE_MESSAGES[result.error] ??
+          CODE_MESSAGES[result.error.toLowerCase()] ??
+          "Could not create your account. Please try again.";
         setErrors({ auth: msg });
         setIsLoading(false);
         return;

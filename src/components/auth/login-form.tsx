@@ -187,6 +187,7 @@ export function LoginForm() {
       }
 
       // result.ok === true — login/signup succeeded
+      setLoading(false);
       router.push(getRoleDashboard(selectedRole));
       router.refresh();
     } catch {
@@ -205,16 +206,15 @@ export function LoginForm() {
     const role: UserRole = selectedRole ?? "student";
 
     if (typeof window !== "undefined") {
-      // Persist so the callback URL can carry it through the redirect round-trip
       localStorage.setItem("lastLoginRole", role);
-      localStorage.setItem("oauthRole",     role);
     }
 
     setGoogleLoading(true);
     try {
-      // Append oauthRole as a query param on the callbackUrl.
-      // auth.ts reads it in the signIn callback via account.oauthRole.
-      const callbackUrl = `${window.location.origin}/dashboard/${role}?oauthRole=${role}`;
+      // Encode role as ?smartbusRole= on the callbackUrl.
+      // auth.ts reads this from account.callbackUrl in the signIn callback.
+      // This is the only reliable cross-browser mechanism — never localStorage.
+      const callbackUrl = `${window.location.origin}/dashboard/${role}?smartbusRole=${role}`;
       await signIn("google", { callbackUrl });
       // signIn("google") triggers a full-page redirect, so nothing runs after this.
     } catch {
