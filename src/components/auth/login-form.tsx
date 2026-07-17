@@ -143,12 +143,11 @@ export function LoginForm() {
 
     // Client-side validation
     const errs: FormErrors = {};
-    if (!data.email?.trim())                             errs.email    = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(data.email))          errs.email    = "Enter a valid email address";
-    if (!data.password?.trim())                          errs.password = "Password is required";
-    else if (isSignUp && (data.password?.length ?? 0) < 8)
-                                                         errs.password = "Password must be at least 8 characters";
-    if (isSignUp && !data.name?.trim())                  errs.name     = "Full name is required";
+    if (!data.email?.trim())                                 errs.email    = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(data.email))              errs.email    = "Enter a valid email address";
+    if (!data.password?.trim())                              errs.password = "Password is required";
+    else if (isSignUp && (data.password?.length ?? 0) < 8)  errs.password = "Password must be at least 8 characters";
+    if (isSignUp && !data.name?.trim())                      errs.name     = "Full name is required";
 
     if (Object.keys(errs).length > 0) {
       setFormErrors(errs);
@@ -167,27 +166,27 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        // Map NextAuth error strings → user-facing messages.
-        // These only ever appear in the credentials banner, never for Google.
-        const msg = result.error.includes("Incorrect password")
-          ? "Incorrect password — please try again."
-          : result.error.includes("already exists")
-          ? "An account with this email already exists for this role. Please log in."
-          : result.error.includes("No account found")
-          ? "No account found with this email — please sign up first."
-          : result.error.includes("No student account")  ||
-            result.error.includes("No parent account")   ||
-            result.error.includes("No driver account")   ||
-            result.error.includes("No admin account")    ||
-            result.error.includes("Try a different role")
-          ? result.error          // already human-readable from auth.ts
-          : "Something went wrong — please try again.";
+        // result.error is now the CredentialsSignin subclass `.code` value,
+        // e.g. "wrong_password", "no_account", "wrong_role", "account_exists".
+        // Map each short code to a human-readable sentence.
+        const CODE_MESSAGES: Record<string, string> = {
+          wrong_password: "Incorrect password — please try again.",
+          no_account:     "No account found with this email — please sign up first.",
+          wrong_role:     `No ${selectedRole} account for this email. Try a different role or sign up.`,
+          account_exists: "An account with this email already exists for this role. Please log in.",
+          invalid_input:  "Please fill in all required fields correctly.",
+        };
+        const msg =
+          CODE_MESSAGES[result.error] ??
+          CODE_MESSAGES[result.error.toLowerCase()] ??
+          "Something went wrong — please try again.";
 
         setFormErrors({ auth: msg });
         setLoading(false);
         return;
       }
 
+      // result.ok === true — login/signup succeeded
       router.push(getRoleDashboard(selectedRole));
       router.refresh();
     } catch {
